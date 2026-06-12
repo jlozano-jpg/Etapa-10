@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import Sidebar from './components/Sidebar'
+import Tabs from './components/Tabs'
 import OperariosList from './components/OperariosList'
 import OperarioPanel from './components/OperarioPanel'
+import PreparacionesList from './components/PreparacionesList'
+import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
+import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
+import PreparacionAreasPanel from './components/PreparacionAreasPanel'
+import PreparacionVistaPanel from './components/PreparacionVistaPanel'
+import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import styles from './App.module.css'
+
+const PEDIDO_VENTA_PANEL_WIDTH = 720
+const AREAS_PANEL_WIDTH = 460
 
 const INITIAL_OPERARIOS = [
   { id: 1, code: '001', name: 'Juan Pérez', usuarioZeus: 'U001 - jperez', inicioActividades: '2020-03-02', fechaNacimiento: '1990-05-20', preparador: true, controlador: false, area: '01 - Depósito Central' },
@@ -13,6 +23,10 @@ const INITIAL_OPERARIOS = [
   { id: 6, code: '006', name: 'Ana Torres', usuarioZeus: 'U006 - atorres', inicioActividades: '2023-02-14', fechaNacimiento: '1998-04-23', preparador: true, controlador: true, area: '04 - Recepción' },
 ]
 
+const INITIAL_PREPARACIONES = []
+
+const INICIO_TAB = { id: 'inicio', label: 'Inicio', closable: false }
+
 export default function App() {
   const [operarios, setOperarios] = useState(INITIAL_OPERARIOS)
   const [selectedOperario, setSelectedOperario] = useState(null)
@@ -20,9 +34,31 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeView, setActiveView] = useState('operarios-stock')
 
+  const [preparaciones, setPreparaciones] = useState(INITIAL_PREPARACIONES)
+  const [preparacionSearchTerm, setPreparacionSearchTerm] = useState('')
+  const [showPreparacionOrigenModal, setShowPreparacionOrigenModal] = useState(false)
+  const [showDocumentoPanel, setShowDocumentoPanel] = useState(false)
+  const [showAreasPanel, setShowAreasPanel] = useState(false)
+  const [selectedOrigenId, setSelectedOrigenId] = useState(null)
+  const [pedidoVentaSeleccion, setPedidoVentaSeleccion] = useState(null)
+  const [preparacionVista, setPreparacionVista] = useState(null)
+  const [preparacionVistaMode, setPreparacionVistaMode] = useState('view')
+
+  const [tabs, setTabs] = useState([INICIO_TAB])
+  const [activeTab, setActiveTab] = useState('inicio')
+
   const filteredOperarios = operarios.filter(o =>
     o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     String(o.code).toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const nextPreparacionId = preparaciones.length > 0 ? Math.max(...preparaciones.map(p => p.id)) + 1 : 1
+  const nextNumeroPreparacion = String(nextPreparacionId).padStart(4, '0')
+
+  const filteredPreparaciones = preparaciones.filter(p =>
+    String(p.codigo ?? '').toLowerCase().includes(preparacionSearchTerm.toLowerCase()) ||
+    String(p.razonSocial ?? '').toLowerCase().includes(preparacionSearchTerm.toLowerCase()) ||
+    String(p.comprobante ?? '').toLowerCase().includes(preparacionSearchTerm.toLowerCase())
   )
 
   const handleViewOperario = (operario) => {
@@ -75,19 +111,200 @@ export default function App() {
     setSearchTerm('')
   }
 
+  const handleViewDetallePreparacion = (preparacion) => {
+    setPreparacionVista(preparacion)
+    setPreparacionVistaMode('view')
+  }
+
+  const handleEditDetallePreparacion = (preparacion) => {
+    setPreparacionVista(preparacion)
+    setPreparacionVistaMode('edit')
+  }
+
+  const handleCloseDetallePreparacion = () => {
+    setPreparacionVista(null)
+  }
+
+  const handleSaveDetallePreparacion = (updatedPreparacion) => {
+    setPreparaciones(preparaciones.map(p => p.id === updatedPreparacion.id ? updatedPreparacion : p))
+    setPreparacionVista(null)
+  }
+
+  const handleCreatePreparacion = () => {
+    setShowPreparacionOrigenModal(true)
+  }
+
+  const handleSelectPreparacionOrigen = (origen) => {
+    if (!ORIGENES_CONFIG[origen.id]) return
+
+    setSelectedOrigenId(origen.id)
+    setShowDocumentoPanel(true)
+  }
+
+  const handleCancelPreparacionOrigen = () => {
+    setShowPreparacionOrigenModal(false)
+    setShowDocumentoPanel(false)
+    setShowAreasPanel(false)
+    setSelectedOrigenId(null)
+    setPedidoVentaSeleccion(null)
+  }
+
+  const handleBackFromDocumento = () => {
+    setShowDocumentoPanel(false)
+  }
+
+  const buildNuevaPreparacion = ({ pedido, prioridad, deposito, metodologiaPickeo, modoEjecucion, origenLabel }, preparador, areasSolicitadas) => {
+    const nextId = preparaciones.length > 0 ? Math.max(...preparaciones.map(p => p.id)) + 1 : 1
+
+    return {
+      id: nextId,
+      numeroPreparacion: String(nextId).padStart(4, '0'),
+      fecha: pedido.fecha.replaceAll('/', '-'),
+      origen: origenLabel,
+      comprobante: pedido.pedido,
+      comprobantesIncluidos: [pedido.pedido],
+      sucursal: '1',
+      deposito,
+      codigo: pedido.pedido,
+      razonSocial: pedido.razonSocial,
+      preparador,
+      prioridad,
+      estado: 'Pendiente',
+      avance: 0,
+      transporte: '',
+      zona: '',
+      localidad: '',
+      metodologiaPickeo,
+      modoEjecucion,
+      areasSolicitadas,
+      clientes: [
+        {
+          razonSocial: pedido.razonSocial,
+          comprobantes: [pedido.pedido],
+          items: pedido.detalle.map(item => ({
+            codigo: item.codigoProducto,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad
+          }))
+        }
+      ]
+    }
+  }
+
+  const handleConfirmDocumento = (seleccion) => {
+    const seleccionConOrigen = { ...seleccion, origenLabel: ORIGENES_CONFIG[selectedOrigenId].badgeLabel }
+
+    if (seleccion.modoEjecucion === 'Picking por Zonas') {
+      setPedidoVentaSeleccion(seleccionConOrigen)
+      setShowAreasPanel(true)
+      return
+    }
+
+    const nuevaPreparacion = buildNuevaPreparacion(seleccionConOrigen, seleccion.preparador, [])
+    setPreparaciones([...preparaciones, nuevaPreparacion])
+
+    setShowDocumentoPanel(false)
+    setShowPreparacionOrigenModal(false)
+    setSelectedOrigenId(null)
+    setPedidoVentaSeleccion(null)
+  }
+
+  const handleBackFromAreas = () => {
+    setShowAreasPanel(false)
+  }
+
+  const handleConfirmAreas = (asignaciones) => {
+    const preparador = Object.entries(asignaciones)
+      .map(([area, prep]) => `${area}: ${prep}`)
+      .join(' | ')
+
+    const areasSolicitadas = Object.entries(asignaciones).map(([area, prep]) => ({
+      area,
+      preparador: prep,
+      avance: 0,
+      estado: 'Pendiente'
+    }))
+
+    const nuevaPreparacion = buildNuevaPreparacion(pedidoVentaSeleccion, preparador, areasSolicitadas)
+    setPreparaciones([...preparaciones, nuevaPreparacion])
+
+    setShowAreasPanel(false)
+    setShowDocumentoPanel(false)
+    setShowPreparacionOrigenModal(false)
+    setSelectedOrigenId(null)
+    setPedidoVentaSeleccion(null)
+  }
+
+  const handleDeletePreparacion = (preparacion) => {
+    if (confirm(`¿Eliminar la preparación ${preparacion.codigo || ''}?`)) {
+      setPreparaciones(preparaciones.filter(p => p.id !== preparacion.id))
+    }
+  }
+
+  const handleGenerateReport = (preparacion) => {
+    alert(`Generando reporte para la preparación ${preparacion.codigo || preparacion.id}...`)
+  }
+
+  const handleNavigate = (viewId) => {
+    setActiveView(viewId)
+
+    if (viewId === 'operarios-stock') {
+      setActiveTab('inicio')
+      return
+    }
+
+    if (viewId === 'preparacion') {
+      setTabs(prev => prev.some(tab => tab.id === 'preparacion')
+        ? prev
+        : [...prev, { id: 'preparacion', label: 'Preparación', closable: true }])
+      setActiveTab('preparacion')
+    }
+  }
+
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId)
+    setActiveView(tabId === 'inicio' ? 'operarios-stock' : tabId)
+  }
+
+  const handleCloseTab = (tabId) => {
+    setTabs(prev => prev.filter(tab => tab.id !== tabId))
+    if (activeTab === tabId) {
+      setActiveTab('inicio')
+      setActiveView('operarios-stock')
+    }
+  }
+
   return (
     <div className={styles.app}>
-      <Sidebar activeView={activeView} onSelectView={setActiveView} />
+      <Sidebar activeView={activeView} onSelectView={handleNavigate} />
       <div className={styles.container}>
-        <OperariosList
-          operarios={filteredOperarios}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onView={handleViewOperario}
-          onEdit={handleEditOperario}
-          onDelete={handleDeleteOperario}
-          onCreate={handleCreateOperario}
-        />
+        <Tabs tabs={tabs} activeTab={activeTab} onSelectTab={handleSelectTab} onCloseTab={handleCloseTab} />
+
+        {activeTab === 'inicio' && (
+          <OperariosList
+            operarios={filteredOperarios}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onView={handleViewOperario}
+            onEdit={handleEditOperario}
+            onDelete={handleDeleteOperario}
+            onCreate={handleCreateOperario}
+          />
+        )}
+
+        {activeTab === 'preparacion' && (
+          <PreparacionesList
+            preparaciones={filteredPreparaciones}
+            searchTerm={preparacionSearchTerm}
+            onSearchChange={setPreparacionSearchTerm}
+            onView={handleViewDetallePreparacion}
+            onCreate={handleCreatePreparacion}
+            onEdit={handleEditDetallePreparacion}
+            onDelete={handleDeletePreparacion}
+            onGenerateReport={handleGenerateReport}
+            onRowClick={handleViewDetallePreparacion}
+          />
+        )}
       </div>
 
       {panelMode && (
@@ -96,6 +313,48 @@ export default function App() {
           operario={selectedOperario}
           onSave={handleSave}
           onCancel={handleCancel}
+        />
+      )}
+
+      {showDocumentoPanel && (
+        <PreparacionDocumentoPanel
+          origenId={selectedOrigenId}
+          onBack={handleBackFromDocumento}
+          onCancel={handleCancelPreparacionOrigen}
+          onConfirm={handleConfirmDocumento}
+          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH : 0}
+          inactive={showAreasPanel}
+        />
+      )}
+
+      {showAreasPanel && pedidoVentaSeleccion && (
+        <PreparacionAreasPanel
+          pedido={pedidoVentaSeleccion.pedido}
+          operarios={operarios}
+          numeroPreparacion={nextNumeroPreparacion}
+          onBack={handleBackFromAreas}
+          onCancel={handleCancelPreparacionOrigen}
+          onConfirm={handleConfirmAreas}
+        />
+      )}
+
+      {showPreparacionOrigenModal && (
+        <PreparacionOrigenPanel
+          onSelect={handleSelectPreparacionOrigen}
+          onCancel={handleCancelPreparacionOrigen}
+          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showDocumentoPanel ? PEDIDO_VENTA_PANEL_WIDTH : 0)}
+          activeOriginId={(showDocumentoPanel || showAreasPanel) ? selectedOrigenId : null}
+          inactive={showDocumentoPanel || showAreasPanel}
+        />
+      )}
+
+      {preparacionVista && (
+        <PreparacionVistaPanel
+          preparacion={preparacionVista}
+          mode={preparacionVistaMode}
+          operarios={operarios}
+          onClose={handleCloseDetallePreparacion}
+          onSave={handleSaveDetallePreparacion}
         />
       )}
     </div>

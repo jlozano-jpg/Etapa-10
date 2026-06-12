@@ -5,11 +5,69 @@ const MENU_ITEMS = [
   {
     id: 'operarios-stock',
     label: 'Operadores de Stock'
+  },
+  {
+    id: 'stock',
+    label: 'Stock',
+    children: [
+      {
+        id: 'preparaciones',
+        label: 'Preparaciones',
+        children: [
+          { id: 'preparacion', label: 'Preparación' },
+          { id: 'control-preparaciones', label: 'Control de Preparaciones' }
+        ]
+      }
+    ]
   }
 ]
 
 export default function Sidebar({ activeView, onSelectView }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [expandedIds, setExpandedIds] = useState(new Set())
+
+  const toggleExpanded = (id) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const renderMenuItems = (items, level = 0) => (
+    items.map(item => {
+      const hasChildren = Array.isArray(item.children) && item.children.length > 0
+      const isExpanded = expandedIds.has(item.id)
+
+      return (
+        <div key={item.id}>
+          <button
+            className={`${styles.menuItem} ${!hasChildren && activeView === item.id ? styles.menuItemActive : ''}`}
+            style={{ paddingLeft: `${20 + level * 16}px` }}
+            onClick={() => hasChildren ? toggleExpanded(item.id) : onSelectView(item.id)}
+            title={item.label}
+            aria-current={!hasChildren && activeView === item.id ? 'page' : undefined}
+            aria-expanded={hasChildren ? isExpanded : undefined}
+          >
+            {hasChildren && (
+              <svg
+                className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`}
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            )}
+            <span className={styles.menuLabel}>{item.label}</span>
+          </button>
+          {hasChildren && isExpanded && renderMenuItems(item.children, level + 1)}
+        </div>
+      )
+    })
+  )
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
@@ -42,17 +100,7 @@ export default function Sidebar({ activeView, onSelectView }) {
       </div>
 
       <nav className={styles.menu} aria-label="Menú principal">
-        {MENU_ITEMS.map(item => (
-          <button
-            key={item.id}
-            className={`${styles.menuItem} ${activeView === item.id ? styles.menuItemActive : ''}`}
-            onClick={() => onSelectView(item.id)}
-            title={item.label}
-            aria-current={activeView === item.id ? 'page' : undefined}
-          >
-            <span className={styles.menuLabel}>{item.label}</span>
-          </button>
-        ))}
+        {renderMenuItems(MENU_ITEMS)}
       </nav>
     </aside>
   )

@@ -154,6 +154,17 @@
   text-overflow: ellipsis;
 }
 
+.expandIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.expandIconOpen {
+  transform: rotate(90deg);
+}
+
 .collapsed .menuItem {
   padding: 12px 8px;
 }
