@@ -53,9 +53,10 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
         : String(b.code).localeCompare(String(a.code), 'es', { numeric: true })
     }
 
-    if (sortBy === 'preparador' || sortBy === 'controlador') {
-      const aVal = a[sortBy] ? 1 : 0
-      const bVal = b[sortBy] ? 1 : 0
+    if (sortBy === 'operador') {
+      const score = (o) => (o.preparador ? 2 : 0) + (o.controlador ? 1 : 0)
+      const aVal = score(a)
+      const bVal = score(b)
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
     }
 
@@ -153,30 +154,25 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
               <th className={styles.statusHeader}>
                 <button
                   type="button"
-                  className={`${styles.columnHeader} ${sortBy === 'preparador' ? styles.activeHeader : ''}`}
-                  onClick={() => handleSort('preparador')}
-                  aria-sort={sortBy === 'preparador' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className={`${styles.columnHeader} ${sortBy === 'operador' ? styles.activeHeader : ''}`}
+                  onClick={() => handleSort('operador')}
+                  aria-sort={sortBy === 'operador' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
-                  Preparador <span className={styles.sortIndicator}>{getSortIndicator('preparador')}</span>
+                  Operador <span className={styles.sortIndicator}>{getSortIndicator('operador')}</span>
                 </button>
               </th>
-              <th className={styles.statusHeader}>
-                <button
-                  type="button"
-                  className={`${styles.columnHeader} ${sortBy === 'controlador' ? styles.activeHeader : ''}`}
-                  onClick={() => handleSort('controlador')}
-                  aria-sort={sortBy === 'controlador' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                >
-                  Controlador <span className={styles.sortIndicator}>{getSortIndicator('controlador')}</span>
-                </button>
+              <th>
+                <svg className={styles.menuHeaderIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Configuración">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
               </th>
-              <th />
             </tr>
           </thead>
           <tbody>
             {sortedOperarios.length === 0 ? (
               <tr>
-                <td colSpan="5" className={styles.empty}>
+                <td colSpan="4" className={styles.empty}>
                   No se encontraron operarios
                 </td>
               </tr>
@@ -191,15 +187,11 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                   <td className={styles.code} style={{ width: columnWidths.code }}>{operario.code}</td>
                   <td className={styles.name} style={{ width: columnWidths.name }}>{operario.name}</td>
                   <td className={styles.statusCell}>
-                    {operario.preparador ? (
-                      <span className={styles.statusBadge}>Activo</span>
-                    ) : (
-                      <span className={styles.statusNo}>-</span>
-                    )}
-                  </td>
-                  <td className={styles.statusCell}>
-                    {operario.controlador ? (
-                      <span className={styles.statusBadge}>Activo</span>
+                    {operario.preparador || operario.controlador ? (
+                      <div className={styles.badgeGroup}>
+                        {operario.preparador && <span className={styles.badgePreparador}>Preparador</span>}
+                        {operario.controlador && <span className={styles.badgeControlador}>Controlador</span>}
+                      </div>
                     ) : (
                       <span className={styles.statusNo}>-</span>
                     )}
