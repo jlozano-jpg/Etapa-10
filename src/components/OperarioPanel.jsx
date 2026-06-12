@@ -106,20 +106,22 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
           <div className={styles.formGroup}>
             <label className={styles.label}>Código *</label>
             <input
-              ref={firstInputRef}
+              ref={mode === 'create' ? firstInputRef : undefined}
               type="text"
               value={formData.code ?? ''}
               onChange={(e) => handleChange('code', e.target.value)}
-              disabled={mode === 'view'}
+              disabled={mode === 'view' || mode === 'edit'}
               onKeyDown={handleKeyDown}
               className={styles.input}
               aria-label="Código"
             />
+            {mode !== 'create' && <p className={styles.helperText}>No editable</p>}
           </div>
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Usuario ZEUS ERP &amp; POS *</label>
             <select
+              ref={mode !== 'create' ? firstInputRef : undefined}
               value={formData.usuarioZeus ?? ''}
               onChange={(e) => handleChange('usuarioZeus', e.target.value)}
               disabled={mode === 'view'}

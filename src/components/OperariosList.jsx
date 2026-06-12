@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './OperariosList.module.css'
 
-export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onCreate }) {
+export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onDelete, onCreate }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [sortBy, setSortBy] = useState('code')
@@ -51,6 +51,12 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
       return sortDirection === 'asc'
         ? String(a.code).localeCompare(String(b.code), 'es', { numeric: true })
         : String(b.code).localeCompare(String(a.code), 'es', { numeric: true })
+    }
+
+    if (sortBy === 'preparador' || sortBy === 'controlador') {
+      const aVal = a[sortBy] ? 1 : 0
+      const bVal = b[sortBy] ? 1 : 0
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
     }
 
     const result = a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
@@ -144,8 +150,26 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                   />
                 </div>
               </th>
-              <th className={styles.statusHeader}>Preparador</th>
-              <th className={styles.statusHeader}>Controlador</th>
+              <th className={styles.statusHeader}>
+                <button
+                  type="button"
+                  className={`${styles.columnHeader} ${sortBy === 'preparador' ? styles.activeHeader : ''}`}
+                  onClick={() => handleSort('preparador')}
+                  aria-sort={sortBy === 'preparador' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Preparador <span className={styles.sortIndicator}>{getSortIndicator('preparador')}</span>
+                </button>
+              </th>
+              <th className={styles.statusHeader}>
+                <button
+                  type="button"
+                  className={`${styles.columnHeader} ${sortBy === 'controlador' ? styles.activeHeader : ''}`}
+                  onClick={() => handleSort('controlador')}
+                  aria-sort={sortBy === 'controlador' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Controlador <span className={styles.sortIndicator}>{getSortIndicator('controlador')}</span>
+                </button>
+              </th>
               <th />
             </tr>
           </thead>
@@ -167,14 +191,18 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                   <td className={styles.code} style={{ width: columnWidths.code }}>{operario.code}</td>
                   <td className={styles.name} style={{ width: columnWidths.name }}>{operario.name}</td>
                   <td className={styles.statusCell}>
-                    <span className={operario.preparador ? styles.statusYes : styles.statusNo}>
-                      {operario.preparador ? 'Sí' : 'No'}
-                    </span>
+                    {operario.preparador ? (
+                      <span className={styles.statusBadge}>Activo</span>
+                    ) : (
+                      <span className={styles.statusNo}>-</span>
+                    )}
                   </td>
                   <td className={styles.statusCell}>
-                    <span className={operario.controlador ? styles.statusYes : styles.statusNo}>
-                      {operario.controlador ? 'Sí' : 'No'}
-                    </span>
+                    {operario.controlador ? (
+                      <span className={styles.statusBadge}>Activo</span>
+                    ) : (
+                      <span className={styles.statusNo}>-</span>
+                    )}
                   </td>
                   <td className={styles.menuCell}>
                     <div className={styles.menuContainer}>
@@ -213,6 +241,20 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                             </svg>
                             Editar
+                          </button>
+                          <button
+                            className={`${styles.dropdownItem} ${styles.deleteItem}`}
+                            onClick={() => {
+                              onDelete(operario)
+                              setOpenMenuId(null)
+                            }}
+                          >
+                            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                            </svg>
+                            Eliminar
                           </button>
                         </div>
                       )}

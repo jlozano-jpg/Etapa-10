@@ -133,16 +133,18 @@
   font-weight: 600;
   color: #002955;
   border-bottom: 2px solid #C2D6D8;
+  border-right: 1px solid #C2D6D8;
   height: 40px;
 }
 
 .table thead th:last-child {
   width: 50px;
   text-align: center;
+  border-right: none;
 }
 
 .statusHeader {
-  text-align: center;
+  text-align: left;
 }
 
 .columnHeader {
@@ -236,12 +238,19 @@
 }
 
 .statusCell {
-  text-align: center;
+  text-align: left;
 }
 
-.statusYes {
+.statusBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: #00CDCD;
-  font-weight: 600;
+  background: #E5FAFA;
+  border-radius: 999px;
 }
 
 .statusNo {
@@ -358,6 +367,27 @@
 
 .dropdownItem:active {
   background: #00CDCD;
+  color: #FCFDFD;
+}
+
+.deleteItem {
+  color: #E85C5C;
+  border-top: 1px solid #C2D6D8;
+}
+
+.deleteItem:hover {
+  background: #FFE5E5;
+  color: #C82828;
+}
+
+.deleteItem:focus {
+  outline: none;
+  background: #FFE5E5;
+  color: #C82828;
+}
+
+.deleteItem:active {
+  background: #C82828;
   color: #FCFDFD;
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Sidebar from './components/Sidebar'
 import OperariosList from './components/OperariosList'
 import OperarioPanel from './components/OperarioPanel'
 import styles from './App.module.css'
@@ -17,6 +18,7 @@ export default function App() {
   const [selectedOperario, setSelectedOperario] = useState(null)
   const [panelMode, setPanelMode] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [activeView, setActiveView] = useState('operarios-stock')
 
   const filteredOperarios = operarios.filter(o =>
     o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,6 +49,12 @@ export default function App() {
     setPanelMode('create')
   }
 
+  const handleDeleteOperario = (operario) => {
+    if (confirm(`¿Eliminar al operario ${operario.name || operario.code}?`)) {
+      setOperarios(operarios.filter(o => o.id !== operario.id))
+    }
+  }
+
   const handleSave = (updatedOperario) => {
     if (panelMode === 'edit') {
       setOperarios(operarios.map(o => o.id === updatedOperario.id ? updatedOperario : o))
@@ -69,6 +77,7 @@ export default function App() {
 
   return (
     <div className={styles.app}>
+      <Sidebar activeView={activeView} onSelectView={setActiveView} />
       <div className={styles.container}>
         <OperariosList
           operarios={filteredOperarios}
@@ -76,6 +85,7 @@ export default function App() {
           onSearchChange={setSearchTerm}
           onView={handleViewOperario}
           onEdit={handleEditOperario}
+          onDelete={handleDeleteOperario}
           onCreate={handleCreateOperario}
         />
       </div>
