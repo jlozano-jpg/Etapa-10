@@ -4,7 +4,7 @@ import styles from './Sidebar.module.css'
 const MENU_ITEMS = [
   {
     id: 'operarios-stock',
-    label: 'Operarios de Stock'
+    label: 'Operadores de Stock'
   }
 ]
 

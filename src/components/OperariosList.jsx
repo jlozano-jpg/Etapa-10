@@ -83,7 +83,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Operarios de Stock</h1>
+        <h1 className={styles.title}>Operadores de Stock</h1>
       </header>
 
       <div className={styles.toolbar}>
