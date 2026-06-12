@@ -8,7 +8,9 @@ import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
 import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
+import ControlPreparacionesList from './components/ControlPreparacionesList'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
+import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
 import styles from './App.module.css'
 
 const PEDIDO_VENTA_PANEL_WIDTH = 720
@@ -44,6 +46,9 @@ export default function App() {
   const [preparacionVista, setPreparacionVista] = useState(null)
   const [preparacionVistaMode, setPreparacionVistaMode] = useState('view')
 
+  const [controlPreparaciones] = useState(CONTROL_PREPARACIONES)
+  const [controlPreparacionesSearchTerm, setControlPreparacionesSearchTerm] = useState('')
+
   const [tabs, setTabs] = useState([INICIO_TAB])
   const [activeTab, setActiveTab] = useState('inicio')
 
@@ -60,6 +65,19 @@ export default function App() {
     String(p.razonSocial ?? '').toLowerCase().includes(preparacionSearchTerm.toLowerCase()) ||
     String(p.comprobante ?? '').toLowerCase().includes(preparacionSearchTerm.toLowerCase())
   )
+
+  const filteredControlPreparaciones = controlPreparaciones.filter(p => {
+    const term = controlPreparacionesSearchTerm.toLowerCase()
+    const matchesPrincipal =
+      String(p.comprobante ?? '').toLowerCase().includes(term) ||
+      String(p.razonSocial ?? '').toLowerCase().includes(term) ||
+      String(p.preparador ?? '').toLowerCase().includes(term)
+    const matchesDetalle = (p.detalle ?? []).some(item =>
+      String(item.codigo ?? '').toLowerCase().includes(term) ||
+      String(item.razonSocial ?? '').toLowerCase().includes(term)
+    )
+    return matchesPrincipal || matchesDetalle
+  })
 
   const handleViewOperario = (operario) => {
     setSelectedOperario(operario)
@@ -245,6 +263,19 @@ export default function App() {
     alert(`Generando reporte para la preparación ${preparacion.codigo || preparacion.id}...`)
   }
 
+  const handleIniciarControl = (seleccion) => {
+    if (!seleccion) return
+    alert(`Iniciando control para ${seleccion.item.codigo} - ${seleccion.item.razonSocial}...`)
+  }
+
+  const handleModificarControl = ({ item }) => {
+    alert(`Modificar control de ${item.codigo} - ${item.razonSocial}...`)
+  }
+
+  const handleLiberarControl = ({ item }) => {
+    alert(`Liberando preparación ${item.codigo} - ${item.razonSocial}...`)
+  }
+
   const handleNavigate = (viewId) => {
     setActiveView(viewId)
 
@@ -258,6 +289,14 @@ export default function App() {
         ? prev
         : [...prev, { id: 'preparacion', label: 'Preparación', closable: true }])
       setActiveTab('preparacion')
+      return
+    }
+
+    if (viewId === 'control-preparaciones') {
+      setTabs(prev => prev.some(tab => tab.id === 'control-preparaciones')
+        ? prev
+        : [...prev, { id: 'control-preparaciones', label: 'Control de Preparaciones', closable: true }])
+      setActiveTab('control-preparaciones')
     }
   }
 
@@ -303,6 +342,17 @@ export default function App() {
             onDelete={handleDeletePreparacion}
             onGenerateReport={handleGenerateReport}
             onRowClick={handleViewDetallePreparacion}
+          />
+        )}
+
+        {activeTab === 'control-preparaciones' && (
+          <ControlPreparacionesList
+            preparaciones={filteredControlPreparaciones}
+            searchTerm={controlPreparacionesSearchTerm}
+            onSearchChange={setControlPreparacionesSearchTerm}
+            onIniciarControl={handleIniciarControl}
+            onModificar={handleModificarControl}
+            onLiberar={handleLiberarControl}
           />
         )}
       </div>
