@@ -271,6 +271,8 @@ export default function App() {
     setPreparaciones([...preparaciones, nuevaPreparacion])
 
     setShowAreasPanel(false)
+    setShowArticulosSinAreaPanel(false)
+    setArticulosSinArea([])
     setShowDocumentoPanel(false)
     setShowPreparacionOrigenModal(false)
     setSelectedOrigenId(null)
