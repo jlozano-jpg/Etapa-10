@@ -8,6 +8,7 @@ import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
 import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
+import PreparacionArticulosSinAreaPanel from './components/PreparacionArticulosSinAreaPanel'
 import ControlPreparacionesList from './components/ControlPreparacionesList'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
@@ -15,6 +16,7 @@ import styles from './App.module.css'
 
 const PEDIDO_VENTA_PANEL_WIDTH = 720
 const AREAS_PANEL_WIDTH = 460
+const ARTICULOS_SIN_AREA_PANEL_WIDTH = 520
 
 const INITIAL_OPERARIOS = [
   { id: 1, code: '001', name: 'Juan Pérez', usuarioZeus: 'U001 - jperez', inicioActividades: '2020-03-02', fechaNacimiento: '1990-05-20', preparador: true, controlador: false, area: '01 - Depósito Central' },
@@ -40,6 +42,8 @@ export default function App() {
   const [preparacionSearchTerm, setPreparacionSearchTerm] = useState('')
   const [showPreparacionOrigenModal, setShowPreparacionOrigenModal] = useState(false)
   const [showDocumentoPanel, setShowDocumentoPanel] = useState(false)
+  const [showArticulosSinAreaPanel, setShowArticulosSinAreaPanel] = useState(false)
+  const [articulosSinArea, setArticulosSinArea] = useState([])
   const [showAreasPanel, setShowAreasPanel] = useState(false)
   const [selectedOrigenId, setSelectedOrigenId] = useState(null)
   const [pedidoVentaSeleccion, setPedidoVentaSeleccion] = useState(null)
@@ -162,6 +166,8 @@ export default function App() {
   const handleCancelPreparacionOrigen = () => {
     setShowPreparacionOrigenModal(false)
     setShowDocumentoPanel(false)
+    setShowArticulosSinAreaPanel(false)
+    setArticulosSinArea([])
     setShowAreasPanel(false)
     setSelectedOrigenId(null)
     setPedidoVentaSeleccion(null)
@@ -213,8 +219,18 @@ export default function App() {
     const seleccionConOrigen = { ...seleccion, origenLabel: ORIGENES_CONFIG[selectedOrigenId].badgeLabel }
 
     if (seleccion.modoEjecucion === 'Picking por Zonas') {
+      const sinArea = seleccion.pedido.detalle
+        .filter(item => !item.area)
+        .map(item => ({ codigoArticulo: item.codigoProducto, descripcion: item.descripcion, ubicacion: item.ubicacion ?? '' }))
+
       setPedidoVentaSeleccion(seleccionConOrigen)
-      setShowAreasPanel(true)
+
+      if (sinArea.length > 0) {
+        setArticulosSinArea(sinArea)
+        setShowArticulosSinAreaPanel(true)
+      } else {
+        setShowAreasPanel(true)
+      }
       return
     }
 
@@ -225,6 +241,14 @@ export default function App() {
     setShowPreparacionOrigenModal(false)
     setSelectedOrigenId(null)
     setPedidoVentaSeleccion(null)
+  }
+
+  const handleBackFromArticulosSinArea = () => {
+    setShowArticulosSinAreaPanel(false)
+  }
+
+  const handleContinuarArticulosSinArea = () => {
+    setShowAreasPanel(true)
   }
 
   const handleBackFromAreas = () => {
@@ -372,6 +396,17 @@ export default function App() {
           onBack={handleBackFromDocumento}
           onCancel={handleCancelPreparacionOrigen}
           onConfirm={handleConfirmDocumento}
+          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + ARTICULOS_SIN_AREA_PANEL_WIDTH : (showArticulosSinAreaPanel ? ARTICULOS_SIN_AREA_PANEL_WIDTH : 0)}
+          inactive={showAreasPanel || showArticulosSinAreaPanel}
+        />
+      )}
+
+      {showArticulosSinAreaPanel && (
+        <PreparacionArticulosSinAreaPanel
+          articulosSinArea={articulosSinArea}
+          onBack={handleBackFromArticulosSinArea}
+          onCancel={handleCancelPreparacionOrigen}
+          onContinuar={handleContinuarArticulosSinArea}
           rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH : 0}
           inactive={showAreasPanel}
         />
@@ -392,9 +427,9 @@ export default function App() {
         <PreparacionOrigenPanel
           onSelect={handleSelectPreparacionOrigen}
           onCancel={handleCancelPreparacionOrigen}
-          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showDocumentoPanel ? PEDIDO_VENTA_PANEL_WIDTH : 0)}
-          activeOriginId={(showDocumentoPanel || showAreasPanel) ? selectedOrigenId : null}
-          inactive={showDocumentoPanel || showAreasPanel}
+          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + ARTICULOS_SIN_AREA_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showArticulosSinAreaPanel ? ARTICULOS_SIN_AREA_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showDocumentoPanel ? PEDIDO_VENTA_PANEL_WIDTH : 0))}
+          activeOriginId={(showDocumentoPanel || showArticulosSinAreaPanel || showAreasPanel) ? selectedOrigenId : null}
+          inactive={showDocumentoPanel || showArticulosSinAreaPanel || showAreasPanel}
         />
       )}
 

@@ -11,7 +11,7 @@ const AREA_DEPOSITO_MAP = {
 export default function PreparacionAreasPanel({ pedido, operarios, numeroPreparacion, onBack, onCancel, onConfirm, rightOffset = 0 }) {
   const preparadores = operarios.filter(o => o.preparador)
 
-  const areas = [...new Set(pedido.detalle.map(item => item.area))]
+  const areas = [...new Set(pedido.detalle.filter(item => item.area).map(item => item.area))]
 
   const formatPreparador = (p) => `${p.code} - ${p.name}`
 

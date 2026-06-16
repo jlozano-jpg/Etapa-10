@@ -6,9 +6,9 @@ export const PEDIDOS = [
     razonSocial: 'JAVIER LOZANO',
     fecha: '2026/06/12',
     detalle: [
-      { deposito: '10', codigoProducto: 'JDL COMUN', descripcion: 'JDL COMUN 1', cantidad: 1, area: 'Área 1' },
-      { deposito: '10', codigoProducto: 'JDL COMUN 2', descripcion: 'JDL COMUN 2', cantidad: 1, area: 'Área 2' },
-      { deposito: '10', codigoProducto: 'JDL COMUN 3', descripcion: 'JDL COMUN 3', cantidad: 1, area: 'Área 3' }
+      { deposito: '10', codigoProducto: 'JDL COMUN', descripcion: 'JDL COMUN 1', cantidad: 1, area: 'Área 1', ubicacion: '1-A1-P1' },
+      { deposito: '10', codigoProducto: 'JDL COMUN 2', descripcion: 'JDL COMUN 2', cantidad: 1, area: 'Área 2', ubicacion: '1-B2-P1' },
+      { deposito: '10', codigoProducto: 'JDL COMUN 3', descripcion: 'JDL COMUN 3', cantidad: 1, area: null, ubicacion: '1-Z1-P1' }
     ]
   }
 ]
