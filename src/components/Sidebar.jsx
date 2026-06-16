@@ -7,6 +7,19 @@ const MENU_ITEMS = [
     label: 'Operadores de Stock'
   },
   {
+    id: 'configuracion',
+    label: 'Configuración',
+    children: [
+      {
+        id: 'tablas-generales',
+        label: 'Tablas Generales',
+        children: [
+          { id: 'prioridades', label: 'Prioridades' }
+        ]
+      }
+    ]
+  },
+  {
     id: 'stock',
     label: 'Stock',
     children: [
@@ -15,7 +28,8 @@ const MENU_ITEMS = [
         label: 'Preparaciones',
         children: [
           { id: 'preparacion', label: 'Preparación' },
-          { id: 'control-preparaciones', label: 'Control de Preparaciones' }
+          { id: 'control-preparaciones', label: 'Control de Preparaciones' },
+          { id: 'despacho', label: 'Despacho' }
         ]
       }
     ]

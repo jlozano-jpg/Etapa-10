@@ -9,6 +9,9 @@ import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
 import ControlPreparacionesList from './components/ControlPreparacionesList'
+import DespachoList from './components/DespachoList'
+import PrioridadesList from './components/PrioridadesList'
+import PrioridadPanel from './components/PrioridadPanel'
 import ControlPanel from './components/ControlPanel'
 import EditPreparacionModal from './components/EditPreparacionModal'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
@@ -74,6 +77,12 @@ const INITIAL_PREPARACIONES = [
   },
 ]
 
+const INITIAL_PRIORIDADES = [
+  { id: 1, codigo: 1, descripcion: 'PRIORIDAD ALTA',  color: '#D32F2F' },
+  { id: 2, codigo: 2, descripcion: 'PRIORIDAD MEDIA', color: '#FFC107' },
+  { id: 3, codigo: 3, descripcion: 'PRIORIDAD BAJA',  color: '#4CAF50' },
+]
+
 const INICIO_TAB = { id: 'inicio', label: 'Inicio', closable: false }
 
 export default function App() {
@@ -93,6 +102,9 @@ export default function App() {
   const [pedidoVentaSeleccion, setPedidoVentaSeleccion] = useState(null)
   const [preparacionVista, setPreparacionVista] = useState(null)
   const [preparacionVistaMode, setPreparacionVistaMode] = useState('view')
+
+  const [prioridades, setPrioridades] = useState(INITIAL_PRIORIDADES)
+  const [prioridadPanel, setPrioridadPanel] = useState(null)
 
   const [controlPreparaciones] = useState(CONTROL_PREPARACIONES)
   const [controlPanelData, setControlPanelData] = useState(null)
@@ -323,6 +335,27 @@ export default function App() {
     alert(`Generando reporte para la preparación ${preparacion.codigo || preparacion.id}...`)
   }
 
+  const handleCrearPrioridad = () => setPrioridadPanel({ mode: 'create', data: null })
+  const handleEditarPrioridad = (p) => setPrioridadPanel({ mode: 'edit', data: p })
+  const handleEliminarPrioridad = (p) => {
+    if (confirm(`¿Eliminar "${p.descripcion}"?`)) {
+      setPrioridades(prev => prev.filter(x => x.id !== p.id))
+    }
+  }
+  const handleGuardarPrioridad = (data) => {
+    if (prioridadPanel.mode === 'create') {
+      const nextId = prioridades.length > 0 ? Math.max(...prioridades.map(p => p.id)) + 1 : 1
+      setPrioridades(prev => [...prev, { ...data, id: nextId }])
+    } else {
+      setPrioridades(prev => prev.map(p => p.id === data.id ? data : p))
+    }
+    setPrioridadPanel(null)
+  }
+  const handleCancelarPrioridad = () => setPrioridadPanel(null)
+
+  const handleRotulos = () => { alert('Generando rótulos...') }
+  const handleImprimirHojaRuta = () => { alert('Imprimiendo hoja de ruta...') }
+
   const handleIniciarControl = (seleccion) => {
     if (!seleccion) return
     setControlPanelData(seleccion)
@@ -363,6 +396,22 @@ export default function App() {
         ? prev
         : [...prev, { id: 'control-preparaciones', label: 'Control de Preparaciones', closable: true }])
       setActiveTab('control-preparaciones')
+      return
+    }
+
+    if (viewId === 'despacho') {
+      setTabs(prev => prev.some(tab => tab.id === 'despacho')
+        ? prev
+        : [...prev, { id: 'despacho', label: 'Despacho', closable: true }])
+      setActiveTab('despacho')
+      return
+    }
+
+    if (viewId === 'prioridades') {
+      setTabs(prev => prev.some(tab => tab.id === 'prioridades')
+        ? prev
+        : [...prev, { id: 'prioridades', label: 'Prioridades', closable: true }])
+      setActiveTab('prioridades')
     }
   }
 
@@ -410,6 +459,22 @@ export default function App() {
             onGenerateReport={handleGenerateReport}
             onPrintReport={handlePrintReport}
             onRowClick={handleViewDetallePreparacion}
+          />
+        )}
+
+        {activeTab === 'prioridades' && (
+          <PrioridadesList
+            prioridades={prioridades}
+            onCrear={handleCrearPrioridad}
+            onEditar={handleEditarPrioridad}
+            onEliminar={handleEliminarPrioridad}
+          />
+        )}
+
+        {activeTab === 'despacho' && (
+          <DespachoList
+            onRotulos={handleRotulos}
+            onImprimirHojaRuta={handleImprimirHojaRuta}
           />
         )}
 
@@ -463,6 +528,15 @@ export default function App() {
         <PreparacionVistaPanel
           preparacion={preparacionVista}
           onClose={handleCloseDetallePreparacion}
+        />
+      )}
+
+      {prioridadPanel && (
+        <PrioridadPanel
+          mode={prioridadPanel.mode}
+          prioridad={prioridadPanel.data}
+          onSave={handleGuardarPrioridad}
+          onCancel={handleCancelarPrioridad}
         />
       )}
 
