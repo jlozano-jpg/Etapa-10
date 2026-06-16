@@ -92,12 +92,12 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
           <span className={styles.searchIcon}>🔍</span>
           <input
             type="text"
-            placeholder="Buscar operario"
+            placeholder="Buscar Operador"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className={styles.searchInput}
             autoFocus
-            aria-label="Buscar operario"
+            aria-label="Buscar Operador"
           />
         </div>
 
@@ -105,7 +105,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
           <svg className={styles.newIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Nuevo Operario
+          Nuevo Operador
         </button>
       </div>
 

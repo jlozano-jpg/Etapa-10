@@ -42,8 +42,143 @@ const GEAR_SVG = (
   </svg>
 )
 
-function RowMenu({ preparacion, openMenuId, setOpenMenuId, onView, onEdit, onDelete, onGenerateReport }) {
-  const showGenerar = preparacion.estado === 'Pendiente'
+const EDIT_PREPARADOR_ESTADOS = new Set(['Sin Asignar', 'Pendiente', 'En Proceso'])
+const IMPRIMIR_ESTADOS        = new Set(['En Proceso', 'Control Pendiente'])
+
+function menuVisibility(estado) {
+  return {
+    editPreparador: EDIT_PREPARADOR_ESTADOS.has(estado),
+    editPrioridad:  estado !== 'Finalizado',
+    generarReporte: estado === 'Pendiente',
+    imprimirReporte: IMPRIMIR_ESTADOS.has(estado),
+  }
+}
+
+const PRIORIDADES_EDIT = [
+  { value: 'Alta',  bg: '#FFE5E5', color: '#C82828' },
+  { value: 'Media', bg: '#FFF8E5', color: '#B87400' },
+  { value: 'Baja',  bg: '#E5FAE5', color: '#1A7A1A' },
+]
+
+function MenuItems({ preparacion, close, operarios, onSaveEdit, onView, onDelete, onGenerateReport, onPrintReport }) {
+  const [editMode, setEditMode] = useState(null)
+  const [selectedVal, setSelectedVal] = useState('')
+  const v = menuVisibility(preparacion.estado)
+  const preparadores = (operarios ?? []).filter(o => o.preparador)
+
+  const startEdit = (mode) => {
+    setSelectedVal(mode === 'preparador' ? (preparacion.preparador ?? '') : (preparacion.prioridad ?? ''))
+    setEditMode(mode)
+  }
+
+  const handleSave = (e) => {
+    e.stopPropagation()
+    onSaveEdit(preparacion.id, editMode === 'preparador' ? { preparador: selectedVal } : { prioridad: selectedVal })
+    close()
+  }
+
+  if (editMode) {
+    return (
+      <div className={styles.inlineEdit}>
+        <button className={styles.inlineBackBtn} onClick={(e) => { e.stopPropagation(); setEditMode(null) }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          {editMode === 'preparador' ? 'Editar Preparador' : 'Editar Prioridad'}
+        </button>
+
+        {editMode === 'preparador' ? (
+          <div className={styles.inlineOptionsList}>
+            {preparadores.map(op => (
+              <label key={op.id} className={`${styles.inlineOption} ${selectedVal === op.name ? styles.inlineOptionSelected : ''}`}
+                onClick={(e) => { e.stopPropagation(); setSelectedVal(op.name) }}>
+                <input type="radio" name="prep-inline" value={op.name} checked={selectedVal === op.name} onChange={() => setSelectedVal(op.name)} className={styles.inlineRadio} />
+                <span className={styles.inlineCode}>{op.code}</span>
+                <span className={styles.inlineName}>{op.name}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.inlinePrioridadGroup}>
+            {PRIORIDADES_EDIT.map(({ value, bg, color }) => (
+              <button key={value} type="button"
+                className={`${styles.inlinePrioridadBtn} ${selectedVal === value ? styles.inlinePrioridadBtnActive : ''}`}
+                style={selectedVal === value ? { background: bg, color, borderColor: color } : {}}
+                onClick={(e) => { e.stopPropagation(); setSelectedVal(value) }}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className={styles.inlineFooter}>
+          <button className={styles.inlineCancelBtn} onClick={(e) => { e.stopPropagation(); setEditMode(null) }}>Cancelar</button>
+          <button className={styles.inlineSaveBtn} onClick={handleSave} disabled={!selectedVal}>Guardar</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onView(preparacion); close() }}>
+        <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" />
+        </svg>
+        Visualizar
+      </button>
+
+      {v.editPreparador && (
+        <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); startEdit('preparador') }}>
+          <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+          Editar Preparador
+        </button>
+      )}
+
+      {v.editPrioridad && (
+        <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); startEdit('prioridad') }}>
+          <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+          </svg>
+          Editar Prioridad
+        </button>
+      )}
+
+      <button className={`${styles.dropdownItem} ${styles.deleteItem}`} onClick={(e) => { e.stopPropagation(); onDelete(preparacion); close() }}>
+        <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" /><path d="M10 11v6M14 11v6" />
+        </svg>
+        Eliminar
+      </button>
+
+      {v.generarReporte && (
+        <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onGenerateReport(preparacion); close() }}>
+          <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /><path d="M16 13H8" /><path d="M16 17H8" /><path d="M10 9H8" />
+          </svg>
+          Generar Reporte
+        </button>
+      )}
+
+      {v.imprimirReporte && (
+        <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onPrintReport(preparacion); close() }}>
+          <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+            <rect x="6" y="14" width="12" height="8" rx="1"/>
+          </svg>
+          Imprimir Reporte
+        </button>
+      )}
+    </>
+  )
+}
+
+function RowMenu({ preparacion, openMenuId, setOpenMenuId, operarios, onSaveEdit, onView, onDelete, onGenerateReport, onPrintReport }) {
+  const close = () => setOpenMenuId(null)
   return (
     <div className={styles.menuContainer}>
       <button
@@ -56,43 +191,18 @@ function RowMenu({ preparacion, openMenuId, setOpenMenuId, onView, onEdit, onDel
       </button>
       {openMenuId === preparacion.id && (
         <div className={styles.dropdown}>
-          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onView(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" />
-            </svg>
-            Visualizar
-          </button>
-          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onEdit(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-            Editar
-          </button>
-          <button className={`${styles.dropdownItem} ${styles.deleteItem}`} onClick={(e) => { e.stopPropagation(); onDelete(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" /><path d="M10 11v6M14 11v6" />
-            </svg>
-            Eliminar
-          </button>
-          {showGenerar && (
-            <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onGenerateReport(preparacion); setOpenMenuId(null) }}>
-              <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /><path d="M16 13H8" /><path d="M16 17H8" /><path d="M10 9H8" />
-              </svg>
-              Generar Reporte
-            </button>
-          )}
+          <MenuItems preparacion={preparacion} close={close} operarios={operarios} onSaveEdit={onSaveEdit} onView={onView} onDelete={onDelete} onGenerateReport={onGenerateReport} onPrintReport={onPrintReport} />
         </div>
       )}
     </div>
   )
 }
 
-function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, onView, onEdit, onDelete, onGenerateReport }) {
+function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, operarios, onSaveEdit, onView, onDelete, onGenerateReport, onPrintReport }) {
   const btnRef = useRef(null)
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 })
   const isOpen = openMenuId === preparacion.id
-  const showGenerar = preparacion.estado === 'Pendiente'
+  const close = () => setOpenMenuId(null)
 
   const handleToggle = (e) => {
     e.stopPropagation()
@@ -114,32 +224,7 @@ function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, onView, onEdit
           style={{ position: 'fixed', top: dropPos.top, right: dropPos.right, left: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onView(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" />
-            </svg>
-            Visualizar
-          </button>
-          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onEdit(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-            Editar
-          </button>
-          <button className={`${styles.dropdownItem} ${styles.deleteItem}`} onClick={(e) => { e.stopPropagation(); onDelete(preparacion); setOpenMenuId(null) }}>
-            <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" /><path d="M10 11v6M14 11v6" />
-            </svg>
-            Eliminar
-          </button>
-          {showGenerar && (
-            <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onGenerateReport(preparacion); setOpenMenuId(null) }}>
-              <svg className={styles.dropdownIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /><path d="M16 13H8" /><path d="M16 17H8" /><path d="M10 9H8" />
-              </svg>
-              Generar Reporte
-            </button>
-          )}
+          <MenuItems preparacion={preparacion} close={close} operarios={operarios} onSaveEdit={onSaveEdit} onView={onView} onDelete={onDelete} onGenerateReport={onGenerateReport} onPrintReport={onPrintReport} />
         </div>,
         document.body
       )}
@@ -147,7 +232,7 @@ function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, onView, onEdit
   )
 }
 
-export default function PreparacionesList({ preparaciones, searchTerm, onSearchChange, onView, onEdit, onDelete, onCreate, onGenerateReport, onRowClick }) {
+export default function PreparacionesList({ preparaciones, searchTerm, onSearchChange, operarios, onSaveEdit, onView, onDelete, onCreate, onGenerateReport, onPrintReport, onRowClick }) {
   const [openMenuId, setOpenMenuId] = useState(null)
   const [viewMode, setViewMode] = useState('list')
 
@@ -159,7 +244,7 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
     return value ?? ''
   }
 
-  const menuProps = { openMenuId, setOpenMenuId, onView, onEdit, onDelete, onGenerateReport }
+  const menuProps = { openMenuId, setOpenMenuId, operarios, onSaveEdit, onView, onDelete, onGenerateReport, onPrintReport }
 
   return (
     <div className={styles.wrapper}>

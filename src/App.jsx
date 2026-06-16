@@ -8,15 +8,12 @@ import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
 import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
-import PreparacionArticulosSinAreaPanel from './components/PreparacionArticulosSinAreaPanel'
 import ControlPreparacionesList from './components/ControlPreparacionesList'
+import EditPreparacionModal from './components/EditPreparacionModal'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
 import styles from './App.module.css'
 
-const PEDIDO_VENTA_PANEL_WIDTH = 720
-const AREAS_PANEL_WIDTH = 460
-const ARTICULOS_SIN_AREA_PANEL_WIDTH = 520
 
 const INITIAL_OPERARIOS = [
   { id: 1, code: '001', name: 'Juan Pérez', usuarioZeus: 'U001 - jperez', inicioActividades: '2020-03-02', fechaNacimiento: '1990-05-20', preparador: true, controlador: false, area: '01 - Depósito Central' },
@@ -89,7 +86,6 @@ export default function App() {
   const [preparacionSearchTerm, setPreparacionSearchTerm] = useState('')
   const [showPreparacionOrigenModal, setShowPreparacionOrigenModal] = useState(false)
   const [showDocumentoPanel, setShowDocumentoPanel] = useState(false)
-  const [showArticulosSinAreaPanel, setShowArticulosSinAreaPanel] = useState(false)
   const [articulosSinArea, setArticulosSinArea] = useState([])
   const [showAreasPanel, setShowAreasPanel] = useState(false)
   const [selectedOrigenId, setSelectedOrigenId] = useState(null)
@@ -185,9 +181,12 @@ export default function App() {
     setPreparacionVistaMode('view')
   }
 
-  const handleEditDetallePreparacion = (preparacion) => {
-    setPreparacionVista(preparacion)
-    setPreparacionVistaMode('edit')
+  const handleSaveEdit = (preparacionId, changes) => {
+    setPreparaciones(prev => prev.map(p => p.id === preparacionId ? { ...p, ...changes } : p))
+  }
+
+  const handlePrintReport = (preparacion) => {
+    alert(`Imprimiendo reporte de la preparación ${preparacion.numeroPreparacion ?? preparacion.id}`)
   }
 
   const handleCloseDetallePreparacion = () => {
@@ -213,7 +212,6 @@ export default function App() {
   const handleCancelPreparacionOrigen = () => {
     setShowPreparacionOrigenModal(false)
     setShowDocumentoPanel(false)
-    setShowArticulosSinAreaPanel(false)
     setArticulosSinArea([])
     setShowAreasPanel(false)
     setSelectedOrigenId(null)
@@ -272,12 +270,8 @@ export default function App() {
 
       setPedidoVentaSeleccion(seleccionConOrigen)
 
-      if (sinArea.length > 0) {
-        setArticulosSinArea(sinArea)
-        setShowArticulosSinAreaPanel(true)
-      } else {
-        setShowAreasPanel(true)
-      }
+      setArticulosSinArea(sinArea)
+      setShowAreasPanel(true)
       return
     }
 
@@ -290,19 +284,11 @@ export default function App() {
     setPedidoVentaSeleccion(null)
   }
 
-  const handleBackFromArticulosSinArea = () => {
-    setShowArticulosSinAreaPanel(false)
-  }
-
-  const handleContinuarArticulosSinArea = () => {
-    setShowAreasPanel(true)
-  }
-
   const handleBackFromAreas = () => {
     setShowAreasPanel(false)
   }
 
-  const handleConfirmAreas = (asignaciones) => {
+  const handleConfirmAreas = (asignaciones, articuloResponsables) => {
     const preparador = Object.entries(asignaciones)
       .map(([area, prep]) => `${area}: ${prep}`)
       .join(' | ')
@@ -318,7 +304,6 @@ export default function App() {
     setPreparaciones([...preparaciones, nuevaPreparacion])
 
     setShowAreasPanel(false)
-    setShowArticulosSinAreaPanel(false)
     setArticulosSinArea([])
     setShowDocumentoPanel(false)
     setShowPreparacionOrigenModal(false)
@@ -409,11 +394,13 @@ export default function App() {
             preparaciones={filteredPreparaciones}
             searchTerm={preparacionSearchTerm}
             onSearchChange={setPreparacionSearchTerm}
+            operarios={operarios}
+            onSaveEdit={handleSaveEdit}
             onView={handleViewDetallePreparacion}
             onCreate={handleCreatePreparacion}
-            onEdit={handleEditDetallePreparacion}
             onDelete={handleDeletePreparacion}
             onGenerateReport={handleGenerateReport}
+            onPrintReport={handlePrintReport}
             onRowClick={handleViewDetallePreparacion}
           />
         )}
@@ -439,48 +426,30 @@ export default function App() {
         />
       )}
 
-      {showDocumentoPanel && (
+      {showAreasPanel && pedidoVentaSeleccion ? (
+        <PreparacionAreasPanel
+          pedido={pedidoVentaSeleccion.pedido}
+          operarios={operarios}
+          numeroPreparacion={nextNumeroPreparacion}
+          articulosSinArea={articulosSinArea}
+          onBack={handleBackFromAreas}
+          onCancel={handleCancelPreparacionOrigen}
+          onConfirm={handleConfirmAreas}
+        />
+      ) : showDocumentoPanel ? (
         <PreparacionDocumentoPanel
           origenId={selectedOrigenId}
           onBack={handleBackFromDocumento}
           onCancel={handleCancelPreparacionOrigen}
           onConfirm={handleConfirmDocumento}
-          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + ARTICULOS_SIN_AREA_PANEL_WIDTH : (showArticulosSinAreaPanel ? ARTICULOS_SIN_AREA_PANEL_WIDTH : 0)}
-          inactive={showAreasPanel || showArticulosSinAreaPanel}
         />
-      )}
-
-      {showArticulosSinAreaPanel && (
-        <PreparacionArticulosSinAreaPanel
-          articulosSinArea={articulosSinArea}
-          onBack={handleBackFromArticulosSinArea}
-          onCancel={handleCancelPreparacionOrigen}
-          onContinuar={handleContinuarArticulosSinArea}
-          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH : 0}
-          inactive={showAreasPanel}
-        />
-      )}
-
-      {showAreasPanel && pedidoVentaSeleccion && (
-        <PreparacionAreasPanel
-          pedido={pedidoVentaSeleccion.pedido}
-          operarios={operarios}
-          numeroPreparacion={nextNumeroPreparacion}
-          onBack={handleBackFromAreas}
-          onCancel={handleCancelPreparacionOrigen}
-          onConfirm={handleConfirmAreas}
-        />
-      )}
-
-      {showPreparacionOrigenModal && (
+      ) : showPreparacionOrigenModal ? (
         <PreparacionOrigenPanel
           onSelect={handleSelectPreparacionOrigen}
           onCancel={handleCancelPreparacionOrigen}
-          rightOffset={showAreasPanel ? AREAS_PANEL_WIDTH + ARTICULOS_SIN_AREA_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showArticulosSinAreaPanel ? ARTICULOS_SIN_AREA_PANEL_WIDTH + PEDIDO_VENTA_PANEL_WIDTH : (showDocumentoPanel ? PEDIDO_VENTA_PANEL_WIDTH : 0))}
-          activeOriginId={(showDocumentoPanel || showArticulosSinAreaPanel || showAreasPanel) ? selectedOrigenId : null}
-          inactive={showDocumentoPanel || showArticulosSinAreaPanel || showAreasPanel}
+          activeOriginId={selectedOrigenId}
         />
-      )}
+      ) : null}
 
       {preparacionVista && (
         <PreparacionVistaPanel
@@ -488,6 +457,7 @@ export default function App() {
           onClose={handleCloseDetallePreparacion}
         />
       )}
+
     </div>
   )
 }
