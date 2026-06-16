@@ -9,6 +9,7 @@ import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
 import ControlPreparacionesList from './components/ControlPreparacionesList'
+import ControlPanel from './components/ControlPanel'
 import EditPreparacionModal from './components/EditPreparacionModal'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
@@ -94,6 +95,7 @@ export default function App() {
   const [preparacionVistaMode, setPreparacionVistaMode] = useState('view')
 
   const [controlPreparaciones] = useState(CONTROL_PREPARACIONES)
+  const [controlPanelData, setControlPanelData] = useState(null)
   const [controlPreparacionesSearchTerm, setControlPreparacionesSearchTerm] = useState('')
 
   const [tabs, setTabs] = useState([INICIO_TAB])
@@ -323,7 +325,13 @@ export default function App() {
 
   const handleIniciarControl = (seleccion) => {
     if (!seleccion) return
-    alert(`Iniciando control para ${seleccion.item.codigo} - ${seleccion.item.razonSocial}...`)
+    setControlPanelData(seleccion)
+  }
+
+  const handleCloseControlPanel = () => setControlPanelData(null)
+
+  const handleConfirmControl = ({ controlador, cantidades, preparacion, item }) => {
+    setControlPanelData(null)
   }
 
   const handleModificarControl = ({ item }) => {
@@ -455,6 +463,16 @@ export default function App() {
         <PreparacionVistaPanel
           preparacion={preparacionVista}
           onClose={handleCloseDetallePreparacion}
+        />
+      )}
+
+      {controlPanelData && (
+        <ControlPanel
+          preparacion={controlPanelData.preparacion}
+          item={controlPanelData.item}
+          operarios={operarios}
+          onClose={handleCloseControlPanel}
+          onConfirm={handleConfirmControl}
         />
       )}
 
