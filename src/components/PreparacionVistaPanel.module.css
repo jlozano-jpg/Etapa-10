@@ -104,8 +104,8 @@
 
 .fieldsGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 20px;
 }
 
 .field {
@@ -234,6 +234,22 @@
   text-align: center;
   color: #667F99;
   font-size: 13px;
+}
+
+.prioridadPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.compNro {
+  color: #667F99;
+  font-size: 12px;
+  width: 36px;
 }
 
 .footer {

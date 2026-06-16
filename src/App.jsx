@@ -27,7 +27,54 @@ const INITIAL_OPERARIOS = [
   { id: 6, code: '006', name: 'Ana Torres', usuarioZeus: 'U006 - atorres', inicioActividades: '2023-02-14', fechaNacimiento: '1998-04-23', preparador: true, controlador: true, area: '04 - Recepción' },
 ]
 
-const INITIAL_PREPARACIONES = []
+const INITIAL_PREPARACIONES = [
+  {
+    id: 101, fecha: '12/06/2026', origen: 'Pedido de venta', comprobante: '00001234', numeroPreparacion: '00001234',
+    sucursal: 'SUCURSAL CENTRAL', deposito: '10', codigo: '00022', razonSocial: 'RETROBOROS SA',
+    preparador: 'Juan Pérez', controlador: '', prioridad: 'Alta', estado: 'Pendiente',
+    avance: 0, transporte: '', zona: 'A', localidad: 'BUENOS AIRES',
+    comprobantesIncluidos: ['00001234'],
+    clientes: [{ razonSocial: 'RETROBOROS SA', comprobantes: ['00001234'], items: [
+      { codigo: 'ART-001', descripcion: 'TORNILLO HEXAGONAL 1/2"', cantidad: 100 },
+      { codigo: 'ART-002', descripcion: 'TUERCA AUTOBLOCANTE M12', cantidad: 50 },
+      { codigo: 'ART-003', descripcion: 'ARANDELA PLANA 10mm', cantidad: 200 },
+    ]}],
+  },
+  {
+    id: 102, fecha: '13/06/2026', origen: 'Sugerencia de compra', comprobante: '00001235', numeroPreparacion: '00001235',
+    sucursal: 'SUCURSAL NORTE', deposito: '20', codigo: '00017', razonSocial: 'DISTRIBUIDORA DEL SUR SA',
+    preparador: 'María Gómez', controlador: 'Lucía Romero', prioridad: 'Media', estado: 'En Proceso',
+    avance: 40, transporte: 'Transporte 1', zona: 'B', localidad: 'CÓRDOBA',
+    comprobantesIncluidos: ['00001235', '00001238'],
+    clientes: [{ razonSocial: 'DISTRIBUIDORA DEL SUR SA', comprobantes: ['00001235', '00001238'], items: [
+      { codigo: 'ART-010', descripcion: 'CABLE UNIPOLAR 2.5mm', cantidad: 300 },
+      { codigo: 'ART-011', descripcion: 'DISYUNTOR TERMICA 16A', cantidad: 10 },
+    ]}],
+  },
+  {
+    id: 103, fecha: '14/06/2026', origen: 'Factura de acopio', comprobante: '00001236', numeroPreparacion: '00001236',
+    sucursal: 'SUCURSAL SUR', deposito: '30', codigo: '00031', razonSocial: 'COMERCIAL NORTE SRL',
+    preparador: 'Carlos Fernández', controlador: 'Ana Torres', prioridad: 'Baja', estado: 'Control Pendiente',
+    avance: 100, transporte: 'Transporte 2', zona: 'C', localidad: 'ROSARIO',
+    comprobantesIncluidos: ['00001236'],
+    clientes: [{ razonSocial: 'COMERCIAL NORTE SRL', comprobantes: ['00001236'], items: [
+      { codigo: 'ART-020', descripcion: 'PINTURA LÁTEX BLANCO 10L', cantidad: 20 },
+      { codigo: 'ART-021', descripcion: 'RODILLO LANA 23cm', cantidad: 15 },
+      { codigo: 'ART-022', descripcion: 'BANDEJA PARA PINTURA', cantidad: 15 },
+    ]}],
+  },
+  {
+    id: 104, fecha: '15/06/2026', origen: 'Pedido de venta', comprobante: '00001237', numeroPreparacion: '00001237',
+    sucursal: 'SUCURSAL CENTRAL', deposito: '10', codigo: '00045', razonSocial: 'IMPORTADORA ATLANTICA',
+    preparador: 'Diego Sosa', controlador: 'María Gómez', prioridad: 'Alta', estado: 'Finalizado',
+    avance: 100, transporte: '', zona: 'A', localidad: 'BUENOS AIRES',
+    comprobantesIncluidos: ['00001237'],
+    clientes: [{ razonSocial: 'IMPORTADORA ATLANTICA', comprobantes: ['00001237'], items: [
+      { codigo: 'ART-030', descripcion: 'NOTEBOOK CORE I5 16GB', cantidad: 5 },
+      { codigo: 'ART-031', descripcion: 'MOUSE INALÁMBRICO', cantidad: 5 },
+    ]}],
+  },
+]
 
 const INICIO_TAB = { id: 'inicio', label: 'Inicio', closable: false }
 
@@ -438,10 +485,7 @@ export default function App() {
       {preparacionVista && (
         <PreparacionVistaPanel
           preparacion={preparacionVista}
-          mode={preparacionVistaMode}
-          operarios={operarios}
           onClose={handleCloseDetallePreparacion}
-          onSave={handleSaveDetallePreparacion}
         />
       )}
     </div>

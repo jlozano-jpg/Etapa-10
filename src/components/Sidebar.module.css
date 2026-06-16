@@ -127,8 +127,6 @@
   transition: background 150ms ease;
   text-align: left;
   font-family: 'Inter', sans-serif;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .menuItem:hover {
@@ -150,8 +148,6 @@
 .menuLabel {
   display: block;
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .expandIcon {
