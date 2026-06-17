@@ -20,7 +20,15 @@ const ESTADO_CLASS = {
   'Control Pendiente': 'estadoPendiente'
 }
 
-export default function ControlPreparacionesList({ preparaciones, searchTerm, onSearchChange, onIniciarControl, onModificar, onLiberar }) {
+const resolvePrioridad = (valor, prioridades) => {
+  if (valor == null || valor === '') return null
+  const byCode = prioridades.find(p => String(p.codigo) === String(valor))
+  if (byCode) return byCode
+  const v = String(valor).toUpperCase()
+  return prioridades.find(p => p.descripcion.toUpperCase().includes(v)) ?? null
+}
+
+export default function ControlPreparacionesList({ preparaciones, searchTerm, onSearchChange, onIniciarControl, onModificar, onLiberar, prioridades = [] }) {
   const [expandedId, setExpandedId] = useState(null)
   const [selectedKey, setSelectedKey] = useState(null)
   const [openMenuKey, setOpenMenuKey] = useState(null)
@@ -33,9 +41,19 @@ export default function ControlPreparacionesList({ preparaciones, searchTerm, on
     setSelectedKey(current => current === key ? null : key)
   }
 
-  const renderPrioridad = (prioridad) => {
-    if (prioridad === '' || prioridad === null || prioridad === undefined) return null
-    return <span className={styles.prioridadBadge}>Prioridad {prioridad}</span>
+  const renderPrioridad = (valor) => {
+    const p = resolvePrioridad(valor, prioridades)
+    if (!p) return null
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        padding: '3px 20px', borderRadius: '20px',
+        border: `2px solid ${p.color}`, color: p.color,
+        fontSize: '12px', fontWeight: '700', background: 'transparent', lineHeight: '1.4',
+      }}>
+        {p.codigo}
+      </span>
+    )
   }
 
   const renderEstado = (estado) => {

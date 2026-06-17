@@ -459,6 +459,7 @@ export default function App() {
             onGenerateReport={handleGenerateReport}
             onPrintReport={handlePrintReport}
             onRowClick={handleViewDetallePreparacion}
+            prioridades={prioridades}
           />
         )}
 
@@ -475,6 +476,7 @@ export default function App() {
           <DespachoList
             onRotulos={handleRotulos}
             onImprimirHojaRuta={handleImprimirHojaRuta}
+            prioridades={prioridades}
           />
         )}
 
@@ -486,6 +488,7 @@ export default function App() {
             onIniciarControl={handleIniciarControl}
             onModificar={handleModificarControl}
             onLiberar={handleLiberarControl}
+            prioridades={prioridades}
           />
         )}
       </div>

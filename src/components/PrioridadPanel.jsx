@@ -1,11 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import styles from './PrioridadPanel.module.css'
-
-const PRESET_COLORS = [
-  '#D32F2F', '#E65100', '#F9A825', '#FDD835',
-  '#4CAF50', '#00897B', '#00CDCD', '#1565C0',
-  '#6A00A7', '#8833B8', '#667F99', '#002955',
-]
 
 export default function PrioridadPanel({ mode, prioridad, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -14,22 +8,42 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel }) {
     descripcion: prioridad?.descripcion ?? '',
     color:       prioridad?.color       ?? '#D32F2F',
   })
+  const [hexInput, setHexInput] = useState(prioridad?.color ?? '#D32F2F')
+  const colorRef = useRef(null)
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }))
+
+  const handleColorChange = (e) => {
+    const val = e.target.value
+    setForm(f => ({ ...f, color: val }))
+    setHexInput(val)
+  }
+
+  const handleHexInput = (e) => {
+    const val = e.target.value
+    setHexInput(val)
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      setForm(f => ({ ...f, color: val }))
+    }
+  }
+
+  const handleHexBlur = () => {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(hexInput)) {
+      setHexInput(form.color)
+    }
+  }
 
   const handleSave = () => {
     if (!form.descripcion.trim()) return
     onSave({ ...form, codigo: Number(form.codigo) || form.codigo })
   }
 
-  const isCreate = mode === 'create'
-
   return (
     <div className={styles.panel} role="dialog" aria-modal="true">
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className={styles.header}>
-        <h2 className={styles.title}>{isCreate ? 'Nueva Prioridad' : 'Editar Prioridad'}</h2>
+        <h2 className={styles.title}>{mode === 'create' ? 'Nueva Prioridad' : 'Editar Prioridad'}</h2>
         <button className={styles.closeBtn} onClick={onCancel} aria-label="Cerrar panel">✕</button>
       </div>
 
@@ -62,34 +76,34 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel }) {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>Color</label>
-
-          <div className={styles.swatches}>
-            {PRESET_COLORS.map(c => (
-              <button
-                key={c}
-                type="button"
-                className={`${styles.swatch} ${form.color === c ? styles.swatchActive : ''}`}
-                style={{ background: c }}
-                onClick={() => setForm(f => ({ ...f, color: c }))}
-                aria-label={`Color ${c}`}
-                title={c}
-              />
-            ))}
-          </div>
-
-          <div className={styles.colorRow}>
+          <label className={styles.label} htmlFor="pri-color">Color</label>
+          <div
+            className={styles.colorField}
+            onClick={() => colorRef.current?.click()}
+            title="Hacer clic para abrir el selector de color"
+          >
             <input
+              ref={colorRef}
+              id="pri-color"
               type="color"
-              className={styles.colorPicker}
+              className={styles.colorNative}
               value={form.color}
-              onChange={set('color')}
-              aria-label="Elegir color personalizado"
-              title="Color personalizado"
+              onChange={handleColorChange}
+              aria-label="Selector de color"
             />
-            <span className={styles.colorPreview} style={{ background: form.color }} />
-            <span className={styles.colorHex}>{form.color.toUpperCase()}</span>
+            <input
+              type="text"
+              className={styles.colorHexInput}
+              value={hexInput}
+              onChange={handleHexInput}
+              onBlur={handleHexBlur}
+              onClick={e => e.stopPropagation()}
+              maxLength={7}
+              placeholder="#000000"
+              aria-label="Código hexadecimal del color"
+            />
           </div>
+
         </div>
 
       </div>

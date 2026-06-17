@@ -8,10 +8,15 @@ const INICIAL = [
   { id: 4, fecha: '03/06/2026', numeroPreparacion: 42, remito: '0001-33', codigo: '0004', razonSocial: 'MARIANO LOPEZ',      prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 4 },
 ]
 
-const PRIORIDAD_COLOR = { Alta: '#D32F2F', Media: '#E65100', Baja: '#1565C0' }
-const PRIORIDAD_TEXT  = { Alta: 'PRIORIDAD ALTA', Media: 'PRIORIDAD MEDIA', Baja: 'PRIORIDAD BAJA' }
+const resolvePrioridad = (valor, prioridades) => {
+  if (valor == null || valor === '') return null
+  const byCode = prioridades.find(p => String(p.codigo) === String(valor))
+  if (byCode) return byCode
+  const v = String(valor).toUpperCase()
+  return prioridades.find(p => p.descripcion.toUpperCase().includes(v)) ?? null
+}
 
-export default function DespachoList({ onRotulos, onImprimirHojaRuta }) {
+export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridades = [] }) {
   const [items, setItems] = useState(INICIAL)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -171,12 +176,20 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta }) {
                 <td className={styles.codeCell}>{item.codigo}</td>
                 <td>{item.razonSocial}</td>
                 <td>
-                  <span
-                    className={styles.prioridadText}
-                    style={{ color: PRIORIDAD_COLOR[item.prioridad] }}
-                  >
-                    {PRIORIDAD_TEXT[item.prioridad] ?? item.prioridad}
-                  </span>
+                  {(() => {
+                    const p = resolvePrioridad(item.prioridad, prioridades)
+                    if (!p) return item.prioridad ?? null
+                    return (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '3px 20px', borderRadius: '20px',
+                        border: `2px solid ${p.color}`, color: p.color,
+                        fontSize: '12px', fontWeight: '700', background: 'transparent', lineHeight: '1.4',
+                      }}>
+                        {p.codigo}
+                      </span>
+                    )
+                  })()}
                 </td>
                 <td>{item.transporte}</td>
                 <td>{item.zona}</td>

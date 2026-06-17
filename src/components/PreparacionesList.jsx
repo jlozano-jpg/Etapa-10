@@ -29,10 +29,27 @@ const KANBAN_COLUMNS = [
   { id: 'Finalizado',         color: '#335477' },
 ]
 
-const PRIORIDAD_CLASS = {
-  Alta:  'kanbanPrioridadAlta',
-  Media: 'kanbanPrioridadMedia',
-  Baja:  'kanbanPrioridadBaja',
+const resolvePrioridad = (valor, prioridades) => {
+  if (valor == null || valor === '') return null
+  const byCode = prioridades.find(p => String(p.codigo) === String(valor))
+  if (byCode) return byCode
+  const v = String(valor).toUpperCase()
+  return prioridades.find(p => p.descripcion.toUpperCase().includes(v)) ?? null
+}
+
+const renderPrioridadPill = (valor, prioridades) => {
+  const p = resolvePrioridad(valor, prioridades)
+  if (!p) return valor ?? null
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      padding: '3px 20px', borderRadius: '20px',
+      border: `2px solid ${p.color}`, color: p.color,
+      fontSize: '12px', fontWeight: '700', background: 'transparent', lineHeight: '1.4',
+    }}>
+      {p.codigo}
+    </span>
+  )
 }
 
 const GEAR_SVG = (
@@ -232,13 +249,14 @@ function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, operarios, onS
   )
 }
 
-export default function PreparacionesList({ preparaciones, searchTerm, onSearchChange, operarios, onSaveEdit, onView, onDelete, onCreate, onGenerateReport, onPrintReport, onRowClick }) {
+export default function PreparacionesList({ preparaciones, searchTerm, onSearchChange, operarios, onSaveEdit, onView, onDelete, onCreate, onGenerateReport, onPrintReport, onRowClick, prioridades = [] }) {
   const [openMenuId, setOpenMenuId] = useState(null)
   const [viewMode, setViewMode] = useState('list')
 
   const formatCell = (preparacion, column) => {
     if (column.key === 'preparador') return <span className={styles.verDetallePill}>Ver detalle</span>
     if (column.key === 'comprobante') return preparacion.numeroPreparacion ?? preparacion.comprobante ?? ''
+    if (column.key === 'prioridad') return renderPrioridadPill(preparacion.prioridad, prioridades)
     const value = preparacion[column.key]
     if (column.key === 'avance') return value === '' || value === null || value === undefined ? '' : `${value}%`
     return value ?? ''
@@ -358,7 +376,6 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
                     <div className={styles.kanbanEmpty}>Sin preparaciones</div>
                   ) : (
                     cards.map(prep => {
-                      const prioridadCls = PRIORIDAD_CLASS[prep.prioridad]
                       const avance = prep.avance ?? 0
                       return (
                         <div
@@ -376,11 +393,7 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
                             <span className={styles.kanbanCardOrigen}>{prep.origen}</span>
                           )}
                           <div className={styles.kanbanCardFooter}>
-                            {prep.prioridad && (
-                              <span className={`${styles.kanbanPrioridad} ${prioridadCls ? styles[prioridadCls] : ''}`}>
-                                {prep.prioridad}
-                              </span>
-                            )}
+                            {prep.prioridad && renderPrioridadPill(prep.prioridad, prioridades)}
                             <span className={styles.kanbanCardAvance}>{avance}%</span>
                           </div>
                         </div>

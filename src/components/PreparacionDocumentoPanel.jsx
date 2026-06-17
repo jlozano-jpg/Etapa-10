@@ -8,7 +8,7 @@ const DEPOSITOS = ['DEPÓSITO INTER B', 'DEPÓSITO CENTRAL', 'DEPÓSITO NORTE', 
 const METODOLOGIAS_PICKEO = [
   { value: 'PEPS', label: 'PEPS', description: 'Primero Entrado Primero Salido' },
   { value: 'UEPS', label: 'UEPS', description: 'Último Entrado Primero Salido' },
-  { value: 'FEFO', label: 'FEFO', description: 'First Expired, First Out' },
+  { value: 'FEFO', label: 'FEFO', description: 'Primero en Vencer, Primero en Salir' },
   { value: 'Liberar ubicaciones', label: 'Liberar Ubicaciones', description: 'Prioriza ubicaciones con menos stock' }
 ]
 const MODOS_EJECUCION = ['Recorrido único', 'Picking por Zonas']
