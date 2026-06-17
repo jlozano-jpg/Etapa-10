@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import styles from './DespachoList.module.css'
+import RotulosPanel from './RotulosPanel'
 
 const CONFIGURABLE_COLS = [
   { key: 'fecha',             label: 'Fecha',                   defaultWidth: 100 },
@@ -19,10 +20,10 @@ const DEFAULT_VISIBLE = Object.fromEntries(CONFIGURABLE_COLS.map(c => [c.key, tr
 const DEFAULT_WIDTHS  = Object.fromEntries(CONFIGURABLE_COLS.map(c => [c.key, c.defaultWidth]))
 
 const INICIAL = [
-  { id: 1, fecha: '02/06/2026', numeroPreparacion: 38, remito: '0001-30', codigo: '0002', razonSocial: 'CHRCER S.A.',       prioridad: 'Alta', transporte: '', zona: '', localidad: 'BAHIA BLANCA', orden: 1 },
-  { id: 2, fecha: '02/06/2026', numeroPreparacion: 40, remito: '0001-31', codigo: '0004', razonSocial: 'MARIANO LOPEZ',      prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 2 },
-  { id: 3, fecha: '02/06/2026', numeroPreparacion: 41, remito: '0001-32', codigo: '0001', razonSocial: 'CONSUMIDOR FINAL',   prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 3 },
-  { id: 4, fecha: '03/06/2026', numeroPreparacion: 42, remito: '0001-33', codigo: '0004', razonSocial: 'MARIANO LOPEZ',      prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 4 },
+  { id: 1, fecha: '02/06/2026', numeroPreparacion: 38, remito: '0001-30', codigo: '0002', razonSocial: 'CHRCER S.A.',       prioridad: 'Alta', transporte: '', zona: '', localidad: 'BAHIA BLANCA', orden: 1, domicilio: 'O HIGGINS 1331',  codigoPostal: '8000' },
+  { id: 2, fecha: '02/06/2026', numeroPreparacion: 40, remito: '0001-31', codigo: '0004', razonSocial: 'MARIANO LOPEZ',      prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 2, domicilio: 'AV COLÓN 1234',   codigoPostal: '7600' },
+  { id: 3, fecha: '02/06/2026', numeroPreparacion: 41, remito: '0001-32', codigo: '0001', razonSocial: 'CONSUMIDOR FINAL',   prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 3, domicilio: 'SAN MARTÍN 456',  codigoPostal: '7600' },
+  { id: 4, fecha: '03/06/2026', numeroPreparacion: 42, remito: '0001-33', codigo: '0004', razonSocial: 'MARIANO LOPEZ',      prioridad: 'Alta', transporte: '', zona: '', localidad: 'MAR DEL PLATA', orden: 4, domicilio: 'MITRE 789',        codigoPostal: '7600' },
 ]
 
 const resolvePrioridad = (valor, prioridades) => {
@@ -51,6 +52,7 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
   const [colsVisible, setColsVisible] = useState(DEFAULT_VISIBLE)
   const [colsMenuOpen, setColsMenuOpen] = useState(false)
   const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
+  const [showRotulos, setShowRotulos] = useState(false)
 
   const dragId    = useRef(null)
   const gearRef   = useRef(null)
@@ -137,6 +139,7 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
   )
 
   return (
+    <>
     <div className={styles.wrapper}>
 
       {/* ── Toolbar ────────────────────────────────────────────── */}
@@ -174,7 +177,13 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
             </svg>
           </button>
           <div className={styles.toolbarSep} />
-          <button className={styles.rotulosBtn} type="button" onClick={onRotulos}>Rótulos</button>
+          <button
+            className={styles.rotulosBtn}
+            type="button"
+            onClick={() => selectedIds.size > 0 ? setShowRotulos(true) : null}
+            disabled={selectedIds.size === 0}
+            title={selectedIds.size === 0 ? 'Seleccioná al menos una línea' : 'Generar rótulos'}
+          >Rótulos</button>
           <button className={styles.imprimirBtn} type="button" onClick={onImprimirHojaRuta}>Imprimir hoja de ruta</button>
         </div>
       </div>
@@ -357,5 +366,15 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
       </div>
 
     </div>
+
+    {showRotulos && (
+      <RotulosPanel
+        items={items.filter(i => selectedIds.has(i.id))}
+        bultos={bultos}
+        onClose={() => setShowRotulos(false)}
+        onImprimir={() => setShowRotulos(false)}
+      />
+    )}
+    </>
   )
 }
