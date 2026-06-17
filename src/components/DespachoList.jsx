@@ -1,5 +1,22 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import styles from './DespachoList.module.css'
+
+const CONFIGURABLE_COLS = [
+  { key: 'fecha',             label: 'Fecha',                   defaultWidth: 100 },
+  { key: 'numeroPreparacion', label: 'Número de preparación',   defaultWidth: 170 },
+  { key: 'remito',            label: 'Remito',                  defaultWidth: 100 },
+  { key: 'codigo',            label: 'Código',                  defaultWidth: 80  },
+  { key: 'razonSocial',       label: 'Razón Social',            defaultWidth: 180 },
+  { key: 'prioridad',         label: 'Prioridad',               defaultWidth: 90  },
+  { key: 'transporte',        label: 'Transporte',              defaultWidth: 110 },
+  { key: 'zona',              label: 'Zona',                    defaultWidth: 90  },
+  { key: 'localidad',         label: 'Localidad',               defaultWidth: 130 },
+  { key: 'bulto',             label: 'Bulto',                   defaultWidth: 80  },
+  { key: 'orden',             label: 'Orden',                   defaultWidth: 70  },
+]
+
+const DEFAULT_VISIBLE = Object.fromEntries(CONFIGURABLE_COLS.map(c => [c.key, true]))
+const DEFAULT_WIDTHS  = Object.fromEntries(CONFIGURABLE_COLS.map(c => [c.key, c.defaultWidth]))
 
 const INICIAL = [
   { id: 1, fecha: '02/06/2026', numeroPreparacion: 38, remito: '0001-30', codigo: '0002', razonSocial: 'CHRCER S.A.',       prioridad: 'Alta', transporte: '', zona: '', localidad: 'BAHIA BLANCA', orden: 1 },
@@ -16,6 +33,13 @@ const resolvePrioridad = (valor, prioridades) => {
   return prioridades.find(p => p.descripcion.toUpperCase().includes(v)) ?? null
 }
 
+const GEAR_SVG = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+)
+
 export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridades = [] }) {
   const [items, setItems] = useState(INICIAL)
   const [searchTerm, setSearchTerm] = useState('')
@@ -24,7 +48,45 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
     () => INICIAL.reduce((acc, item) => { acc[item.id] = ''; return acc }, {})
   )
   const [dragOverId, setDragOverId] = useState(null)
-  const dragId = useRef(null)
+  const [colsVisible, setColsVisible] = useState(DEFAULT_VISIBLE)
+  const [colsMenuOpen, setColsMenuOpen] = useState(false)
+  const [colWidths, setColWidths] = useState(DEFAULT_WIDTHS)
+
+  const dragId    = useRef(null)
+  const gearRef   = useRef(null)
+  const resizeRef = useRef(null)
+
+  useEffect(() => {
+    if (!colsMenuOpen) return
+    const handler = (e) => {
+      if (gearRef.current && !gearRef.current.contains(e.target)) setColsMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [colsMenuOpen])
+
+  const handleResizeStart = useCallback((e, key) => {
+    e.preventDefault()
+    resizeRef.current = { key, startX: e.clientX, startWidth: colWidths[key] }
+
+    const onMove = (e) => {
+      if (!resizeRef.current) return
+      const delta = e.clientX - resizeRef.current.startX
+      const newW  = Math.max(50, resizeRef.current.startWidth + delta)
+      setColWidths(prev => ({ ...prev, [resizeRef.current.key]: newW }))
+    }
+    const onUp = () => {
+      resizeRef.current = null
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [colWidths])
+
+  const toggleCol = (key) => setColsVisible(prev => ({ ...prev, [key]: !prev[key] }))
+  const vis = (key) => colsVisible[key]
+  const w   = (key) => ({ width: colWidths[key], minWidth: colWidths[key] })
 
   const filtered = items.filter(item =>
     item.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,6 +131,10 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
   }
 
   const handleDragEnd = () => { dragId.current = null; setDragOverId(null) }
+
+  const ResizeHandle = ({ colKey }) => (
+    <div className={styles.resizeHandle} onMouseDown={e => handleResizeStart(e, colKey)} />
+  )
 
   return (
     <div className={styles.wrapper}>
@@ -115,30 +181,103 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
 
       {/* ── Table ──────────────────────────────────────────────── */}
       <div className={styles.tableContainer}>
-        <table className={styles.table}>
+        <table className={styles.table} style={{ tableLayout: 'fixed' }}>
           <thead>
             <tr>
               <th className={styles.checkCol}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Seleccionar todos" />
               </th>
               <th className={styles.handleCol}></th>
-              <th>Fecha</th>
-              <th>Número de preparación</th>
-              <th>Remito</th>
-              <th>Código</th>
-              <th>Razón Social</th>
-              <th>Prioridad</th>
-              <th>Transporte</th>
-              <th>Zona</th>
-              <th>Localidad</th>
-              <th className={styles.bultoCol}>Bulto</th>
-              <th className={styles.ordenCol}>Orden</th>
+
+              {vis('fecha') && (
+                <th style={w('fecha')}>
+                  Fecha<ResizeHandle colKey="fecha" />
+                </th>
+              )}
+              {vis('numeroPreparacion') && (
+                <th style={w('numeroPreparacion')}>
+                  Número de preparación<ResizeHandle colKey="numeroPreparacion" />
+                </th>
+              )}
+              {vis('remito') && (
+                <th style={w('remito')}>
+                  Remito<ResizeHandle colKey="remito" />
+                </th>
+              )}
+              {vis('codigo') && (
+                <th style={w('codigo')}>
+                  Código<ResizeHandle colKey="codigo" />
+                </th>
+              )}
+              {vis('razonSocial') && (
+                <th style={w('razonSocial')}>
+                  Razón Social<ResizeHandle colKey="razonSocial" />
+                </th>
+              )}
+              {vis('prioridad') && (
+                <th style={w('prioridad')}>
+                  Prioridad<ResizeHandle colKey="prioridad" />
+                </th>
+              )}
+              {vis('transporte') && (
+                <th style={w('transporte')}>
+                  Transporte<ResizeHandle colKey="transporte" />
+                </th>
+              )}
+              {vis('zona') && (
+                <th style={w('zona')}>
+                  Zona<ResizeHandle colKey="zona" />
+                </th>
+              )}
+              {vis('localidad') && (
+                <th style={w('localidad')}>
+                  Localidad<ResizeHandle colKey="localidad" />
+                </th>
+              )}
+              {vis('bulto') && (
+                <th className={styles.bultoCol} style={w('bulto')}>
+                  Bulto<ResizeHandle colKey="bulto" />
+                </th>
+              )}
+              {vis('orden') && (
+                <th className={styles.ordenCol} style={w('orden')}>
+                  Orden<ResizeHandle colKey="orden" />
+                </th>
+              )}
+
+              <th className={styles.gearCol} ref={gearRef}>
+                <button
+                  type="button"
+                  className={styles.gearBtn}
+                  onClick={() => setColsMenuOpen(o => !o)}
+                  title="Configurar columnas"
+                  aria-label="Configurar columnas visibles"
+                  aria-expanded={colsMenuOpen}
+                >
+                  {GEAR_SVG}
+                </button>
+                {colsMenuOpen && (
+                  <div className={styles.colsMenu} role="menu">
+                    <div className={styles.colsMenuHeader}>Columnas visibles</div>
+                    {CONFIGURABLE_COLS.map(col => (
+                      <label key={col.key} className={styles.colsMenuItem}>
+                        <input
+                          type="checkbox"
+                          checked={colsVisible[col.key]}
+                          onChange={() => toggleCol(col.key)}
+                        />
+                        <span>{col.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={13} className={styles.empty}>No se encontraron registros</td>
+                <td colSpan={CONFIGURABLE_COLS.length + 3} className={styles.empty}>No se encontraron registros</td>
               </tr>
             ) : filtered.map(item => (
               <tr
@@ -170,42 +309,47 @@ export default function DespachoList({ onRotulos, onImprimirHojaRuta, prioridade
                     </svg>
                   </span>
                 </td>
-                <td>{item.fecha}</td>
-                <td>{item.numeroPreparacion}</td>
-                <td>{item.remito}</td>
-                <td className={styles.codeCell}>{item.codigo}</td>
-                <td>{item.razonSocial}</td>
-                <td>
-                  {(() => {
-                    const p = resolvePrioridad(item.prioridad, prioridades)
-                    if (!p) return item.prioridad ?? null
-                    return (
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        padding: '3px 20px', borderRadius: '20px',
-                        border: `2px solid ${p.color}`, color: p.color,
-                        fontSize: '12px', fontWeight: '700', background: 'transparent', lineHeight: '1.4',
-                      }}>
-                        {p.codigo}
-                      </span>
-                    )
-                  })()}
-                </td>
-                <td>{item.transporte}</td>
-                <td>{item.zona}</td>
-                <td>{item.localidad}</td>
-                <td className={styles.bultoCol}>
-                  <input
-                    type="number"
-                    className={styles.bultoInput}
-                    value={bultos[item.id] ?? ''}
-                    onChange={e => setBultos(p => ({ ...p, [item.id]: e.target.value }))}
-                    min="0"
-                    placeholder="0"
-                    aria-label={`Bulto ${item.remito}`}
-                  />
-                </td>
-                <td className={styles.ordenCol}>{item.orden}</td>
+                {vis('fecha')             && <td>{item.fecha}</td>}
+                {vis('numeroPreparacion') && <td>{item.numeroPreparacion}</td>}
+                {vis('remito')            && <td>{item.remito}</td>}
+                {vis('codigo')            && <td className={styles.codeCell}>{item.codigo}</td>}
+                {vis('razonSocial')       && <td>{item.razonSocial}</td>}
+                {vis('prioridad') && (
+                  <td>
+                    {(() => {
+                      const p = resolvePrioridad(item.prioridad, prioridades)
+                      if (!p) return item.prioridad ?? null
+                      return (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '3px 20px', borderRadius: '20px',
+                          border: `2px solid ${p.color}`, color: p.color,
+                          fontSize: '12px', fontWeight: '700', background: 'transparent', lineHeight: '1.4',
+                        }}>
+                          {p.codigo}
+                        </span>
+                      )
+                    })()}
+                  </td>
+                )}
+                {vis('transporte') && <td>{item.transporte}</td>}
+                {vis('zona')       && <td>{item.zona}</td>}
+                {vis('localidad')  && <td>{item.localidad}</td>}
+                {vis('bulto') && (
+                  <td className={styles.bultoCol}>
+                    <input
+                      type="number"
+                      className={styles.bultoInput}
+                      value={bultos[item.id] ?? ''}
+                      onChange={e => setBultos(p => ({ ...p, [item.id]: e.target.value }))}
+                      min="0"
+                      placeholder="0"
+                      aria-label={`Bulto ${item.remito}`}
+                    />
+                  </td>
+                )}
+                {vis('orden') && <td className={styles.ordenCol}>{item.orden}</td>}
+                <td />
               </tr>
             ))}
           </tbody>

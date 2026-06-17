@@ -85,7 +85,7 @@ export default function PreparacionDocumentoPanel({ origenId, onBack, onCancel, 
   }
 
   const isContinueDisabled = selectedId === null
-    || (modoEjecucion !== 'Picking por Zonas' && (!preparador || !prioridad))
+    || (modoEjecucion !== 'Picking por Áreas' && (!preparador || !prioridad))
 
   return (
     <>

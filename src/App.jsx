@@ -277,7 +277,7 @@ export default function App() {
   const handleConfirmDocumento = (seleccion) => {
     const seleccionConOrigen = { ...seleccion, origenLabel: ORIGENES_CONFIG[selectedOrigenId].badgeLabel }
 
-    if (seleccion.modoEjecucion === 'Picking por Zonas') {
+    if (seleccion.modoEjecucion === 'Picking por Áreas') {
       const sinArea = seleccion.pedido.detalle
         .filter(item => !item.area)
         .map(item => ({ codigoArticulo: item.codigoProducto, descripcion: item.descripcion, ubicacion: item.ubicacion ?? '' }))
