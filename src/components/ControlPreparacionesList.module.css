@@ -102,6 +102,27 @@
   color: #FCFDFD;
 }
 
+.liberarBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  border: 1px solid #C2D6D8;
+  border-radius: 6px;
+  background: #FCFDFD;
+  color: #335477;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.liberarBtn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.liberarBtn:hover { background: #F3F7F7; border-color: #8833B8; color: #8833B8; }
+.liberarBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
 .startBtn {
   position: relative;
   display: inline-flex;
