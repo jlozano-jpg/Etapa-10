@@ -11,19 +11,19 @@ const METODOLOGIAS_PICKEO = [
   { value: 'FEFO', label: 'FEFO', description: 'Primero en Vencer, Primero en Salir' },
   { value: 'Liberar ubicaciones', label: 'Liberar Ubicaciones', description: 'Prioriza ubicaciones con menos stock' }
 ]
-const MODOS_EJECUCION = ['Recorrido único', 'Picking por Zonas']
+const MODOS_EJECUCION = ['Recorrido Único', 'Picking por Áreas']
 
 export default function PreparacionDocumentoPanel({ origenId, onBack, onCancel, onConfirm, rightOffset = 0, inactive = false }) {
   const config = ORIGENES_CONFIG[origenId]
   const documentos = config.documentos
 
   const [metodologiaPickeo, setMetodologiaPickeo] = useState('Liberar ubicaciones')
-  const [modoEjecucion, setModoEjecucion] = useState('Recorrido único')
+  const [modoEjecucion, setModoEjecucion] = useState('Recorrido Único')
   const [preparador, setPreparador] = useState('')
   const [prioridad, setPrioridad] = useState('')
   const [deposito, setDeposito] = useState('DEPÓSITO INTER B')
 
-  const isPreparadorDisabled = modoEjecucion === 'Picking por Zonas'
+  const isPreparadorDisabled = modoEjecucion === 'Picking por Áreas'
   const [selectedId, setSelectedId] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
   const [selectedDetalleItems, setSelectedDetalleItems] = useState(new Set())
