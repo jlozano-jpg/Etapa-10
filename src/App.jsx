@@ -506,6 +506,7 @@ export default function App() {
         <PreparacionAreasPanel
           pedido={pedidoVentaSeleccion.pedido}
           operarios={operarios}
+          preparaciones={preparaciones}
           numeroPreparacion={nextNumeroPreparacion}
           articulosSinArea={articulosSinArea}
           onBack={handleBackFromAreas}
@@ -515,6 +516,7 @@ export default function App() {
       ) : showDocumentoPanel ? (
         <PreparacionDocumentoPanel
           origenId={selectedOrigenId}
+          preparaciones={preparaciones}
           onBack={handleBackFromDocumento}
           onCancel={handleCancelPreparacionOrigen}
           onConfirm={handleConfirmDocumento}

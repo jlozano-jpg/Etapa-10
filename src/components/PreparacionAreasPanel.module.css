@@ -199,8 +199,15 @@
   vertical-align: middle;
 }
 
+.preparadorCellWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .preparadorSelect {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   font-size: 13px;
   font-family: 'Inter', sans-serif;
@@ -220,6 +227,28 @@
   outline: none;
   border-color: #8833B8;
   box-shadow: 0 0 0 3px #F0E5F6;
+}
+
+.busyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #FFF3E0;
+  color: #E65100;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: help;
+  flex-shrink: 0;
+  border: 1px solid #FFCC80;
+}
+
+.busyBadge svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .footer {

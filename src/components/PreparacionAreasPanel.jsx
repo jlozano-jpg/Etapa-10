@@ -8,8 +8,22 @@ const AREA_DEPOSITO_MAP = {
   'Área 4': '04 - Recepción'
 }
 
-export default function PreparacionAreasPanel({ pedido, operarios, numeroPreparacion, articulosSinArea = [], onBack, onCancel, onConfirm }) {
+const ESTADOS_OCUPADO = ['Pendiente', 'En Proceso']
+
+const ClockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+
+export default function PreparacionAreasPanel({ pedido, operarios, preparaciones = [], numeroPreparacion, articulosSinArea = [], onBack, onCancel, onConfirm }) {
   const preparadores = operarios.filter(o => o.preparador)
+
+  const busyMap = new Map()
+  preparaciones
+    .filter(p => ESTADOS_OCUPADO.includes(p.estado))
+    .forEach(p => { if (!busyMap.has(p.preparador)) busyMap.set(p.preparador, p) })
   const areas = [...new Set(pedido.detalle.filter(item => item.area).map(item => item.area))]
 
   const formatPreparador = (p) => `${p.code} - ${p.name}`
@@ -36,6 +50,11 @@ export default function PreparacionAreasPanel({ pedido, operarios, numeroPrepara
       return acc
     }, {})
   )
+
+  const getBusyPrep = (formattedValue) => {
+    const name = formattedValue.split(' - ').slice(1).join(' - ')
+    return busyMap.get(name) ?? null
+  }
 
   const handleChangeArea = (area, value) =>
     setAsignaciones(prev => ({ ...prev, [area]: value }))
@@ -76,23 +95,39 @@ export default function PreparacionAreasPanel({ pedido, operarios, numeroPrepara
               </tr>
             </thead>
             <tbody>
-              {areas.map(area => (
-                <tr key={area}>
-                  <td>{area}</td>
-                  <td>
-                    <select
-                      className={styles.preparadorSelect}
-                      value={asignaciones[area] ?? ''}
-                      onChange={(e) => handleChangeArea(area, e.target.value)}
-                      aria-label={`Preparador para ${area}`}
-                    >
-                      {preparadores.map(p => (
-                        <option key={p.id} value={formatPreparador(p)}>{formatPreparador(p)}</option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              ))}
+              {areas.map(area => {
+                const busyPrep = getBusyPrep(asignaciones[area] ?? '')
+                return (
+                  <tr key={area}>
+                    <td>{area}</td>
+                    <td>
+                      <div className={styles.preparadorCellWrap}>
+                        <select
+                          className={styles.preparadorSelect}
+                          value={asignaciones[area] ?? ''}
+                          onChange={(e) => handleChangeArea(area, e.target.value)}
+                          aria-label={`Preparador para ${area}`}
+                        >
+                          {preparadores.map(p => (
+                            <option key={p.id} value={formatPreparador(p)}>
+                              {formatPreparador(p)}
+                            </option>
+                          ))}
+                        </select>
+                        {busyPrep && (
+                          <span
+                            className={styles.busyBadge}
+                            title={`Ocupado en preparación #${busyPrep.numeroPreparacion} (${busyPrep.estado})`}
+                          >
+                            <ClockIcon />
+                            Ocupado
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -111,25 +146,41 @@ export default function PreparacionAreasPanel({ pedido, operarios, numeroPrepara
                   </tr>
                 </thead>
                 <tbody>
-                  {articulosSinArea.map((art, i) => (
-                    <tr key={i}>
-                      <td className={styles.codeCell}>{art.codigoArticulo}</td>
-                      <td>{art.descripcion}</td>
-                      <td className={styles.ubicacionCell}>{art.ubicacion}</td>
-                      <td>
-                        <select
-                          className={styles.preparadorSelect}
-                          value={articuloResponsables[i] ?? ''}
-                          onChange={(e) => handleChangeArticulo(i, e.target.value)}
-                          aria-label={`Responsable para ${art.codigoArticulo}`}
-                        >
-                          {preparadores.map(p => (
-                            <option key={p.id} value={formatPreparador(p)}>{formatPreparador(p)}</option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
+                  {articulosSinArea.map((art, i) => {
+                    const busyPrep = getBusyPrep(articuloResponsables[i] ?? '')
+                    return (
+                      <tr key={i}>
+                        <td className={styles.codeCell}>{art.codigoArticulo}</td>
+                        <td>{art.descripcion}</td>
+                        <td className={styles.ubicacionCell}>{art.ubicacion}</td>
+                        <td>
+                          <div className={styles.preparadorCellWrap}>
+                            <select
+                              className={styles.preparadorSelect}
+                              value={articuloResponsables[i] ?? ''}
+                              onChange={(e) => handleChangeArticulo(i, e.target.value)}
+                              aria-label={`Responsable para ${art.codigoArticulo}`}
+                            >
+                              {preparadores.map(p => (
+                                <option key={p.id} value={formatPreparador(p)}>
+                                  {formatPreparador(p)}
+                                </option>
+                              ))}
+                            </select>
+                            {busyPrep && (
+                              <span
+                                className={styles.busyBadge}
+                                title={`Ocupado en preparación #${busyPrep.numeroPreparacion} (${busyPrep.estado})`}
+                              >
+                                <ClockIcon />
+                                Ocupado
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

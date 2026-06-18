@@ -11,9 +11,20 @@ const METODOLOGIAS_PICKEO = [
   { value: 'FEFO', label: 'FEFO', description: 'Primero en Vencer, Primero en Salir' },
   { value: 'Liberar ubicaciones', label: 'Liberar Ubicaciones', description: 'Prioriza ubicaciones con menos stock' }
 ]
-const MODOS_EJECUCION = ['Recorrido Único', 'Picking por Áreas']
+const MODOS_EJECUCION = [
+  { value: 'Recorrido Único', label: 'Recorrido Único', description: 'Un preparador recorre todas las ubicaciones del depósito' },
+  { value: 'Picking por Áreas', label: 'Picking por Áreas', description: 'Un preparador por área; el pickeo se realiza en simultáneo' },
+]
+const ESTADOS_OCUPADO = ['Pendiente', 'En Proceso']
 
-export default function PreparacionDocumentoPanel({ origenId, onBack, onCancel, onConfirm, rightOffset = 0, inactive = false }) {
+const ClockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+
+export default function PreparacionDocumentoPanel({ origenId, preparaciones = [], onBack, onCancel, onConfirm, rightOffset = 0, inactive = false }) {
   const config = ORIGENES_CONFIG[origenId]
   const documentos = config.documentos
 
@@ -23,27 +34,38 @@ export default function PreparacionDocumentoPanel({ origenId, onBack, onCancel, 
   const [prioridad, setPrioridad] = useState('')
   const [deposito, setDeposito] = useState('DEPÓSITO INTER B')
 
+  const busyMap = new Map()
+  preparaciones
+    .filter(p => ESTADOS_OCUPADO.includes(p.estado))
+    .forEach(p => { if (!busyMap.has(p.preparador)) busyMap.set(p.preparador, p) })
+
   const isPreparadorDisabled = modoEjecucion === 'Picking por Áreas'
   const [selectedId, setSelectedId] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
   const [selectedDetalleItems, setSelectedDetalleItems] = useState(new Set())
   const [metodologiaOpen, setMetodologiaOpen] = useState(false)
+  const [modoOpen, setModoOpen] = useState(false)
   const metodologiaRef = useRef(null)
+  const modoRef = useRef(null)
 
   useEffect(() => {
-    if (!metodologiaOpen) return
+    if (!metodologiaOpen && !modoOpen) return
 
     const handleClickOutside = (e) => {
-      if (metodologiaRef.current && !metodologiaRef.current.contains(e.target)) {
+      if (metodologiaOpen && metodologiaRef.current && !metodologiaRef.current.contains(e.target)) {
         setMetodologiaOpen(false)
+      }
+      if (modoOpen && modoRef.current && !modoRef.current.contains(e.target)) {
+        setModoOpen(false)
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [metodologiaOpen])
+  }, [metodologiaOpen, modoOpen])
 
   const selectedMetodologia = METODOLOGIAS_PICKEO.find(m => m.value === metodologiaPickeo)
+  const selectedModo = MODOS_EJECUCION.find(m => m.value === modoEjecucion)
 
   const toggleSelect = (pedido) => {
     const isSelecting = selectedId !== pedido.id
@@ -151,32 +173,70 @@ export default function PreparacionDocumentoPanel({ origenId, onBack, onCancel, 
             )}
           </div>
 
-          <div className={styles.filterField}>
-            <label className={styles.filterLabel} htmlFor="prep-documento-modo-ejecucion">Modo de ejecución</label>
-            <select
-              id="prep-documento-modo-ejecucion"
-              className={styles.filterSelect}
-              value={modoEjecucion}
-              onChange={(e) => setModoEjecucion(e.target.value)}
+          <div className={styles.filterField} ref={modoRef}>
+            <label className={styles.filterLabel} id="prep-documento-modo-label">Modo de ejecución</label>
+            <button
+              type="button"
+              className={`${styles.filterSelectBtn} ${modoOpen ? styles.filterSelectBtnOpen : ''}`}
+              onClick={() => setModoOpen(open => !open)}
+              aria-haspopup="listbox"
+              aria-expanded={modoOpen}
+              aria-labelledby="prep-documento-modo-label"
             >
-              {MODOS_EJECUCION.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
+              <span>{selectedModo.label}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {modoOpen && (
+              <div className={styles.metodologiaDropdown} role="listbox">
+                {MODOS_EJECUCION.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="option"
+                    aria-selected={modoEjecucion === opt.value}
+                    className={`${styles.metodologiaOption} ${modoEjecucion === opt.value ? styles.metodologiaOptionActive : ''}`}
+                    onClick={() => {
+                      setModoEjecucion(opt.value)
+                      setModoOpen(false)
+                    }}
+                  >
+                    <span className={styles.metodologiaOptionTitle}>{opt.label}</span>
+                    <span className={styles.metodologiaOptionDescription}>{opt.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className={styles.filtersRow}>
-          <div className={`${styles.filterField} ${isPreparadorDisabled ? styles.filterFieldDisabled : ''}`}>
+          <div className={`${styles.filterField} ${styles.filterFieldPreparador} ${isPreparadorDisabled ? styles.filterFieldDisabled : ''}`}>
             <label className={styles.filterLabel} htmlFor="prep-documento-preparador">Preparador</label>
-            <select
-              id="prep-documento-preparador"
-              className={styles.filterSelect}
-              value={preparador}
-              onChange={(e) => setPreparador(e.target.value)}
-              disabled={isPreparadorDisabled}
-            >
-              <option value="">Selecciona preparador</option>
-              {PREPARADORES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <div className={styles.preparadorWrap}>
+              <select
+                id="prep-documento-preparador"
+                className={styles.filterSelect}
+                value={preparador}
+                onChange={(e) => setPreparador(e.target.value)}
+                disabled={isPreparadorDisabled}
+              >
+                <option value="">Selecciona preparador</option>
+                {PREPARADORES.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              {preparador && busyMap.has(preparador) && (
+                <span
+                  className={styles.busyBadge}
+                  title={`Ocupado en preparación #${busyMap.get(preparador).numeroPreparacion} (${busyMap.get(preparador).estado})`}
+                >
+                  <ClockIcon />
+                  Ocupado
+                </span>
+              )}
+            </div>
           </div>
 
           <div className={styles.filterField}>
