@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import PreparacionesFilterPanel, { buildEmptyFilters } from './PreparacionesFilterPanel'
 import styles from './PreparacionesList.module.css'
 
 const COLUMNS = [
@@ -8,15 +9,12 @@ const COLUMNS = [
   { key: 'comprobante', label: 'Comprobante' },
   { key: 'sucursal', label: 'Sucursal' },
   { key: 'deposito', label: 'Depósito' },
-  { key: 'codigo', label: 'Código' },
-  { key: 'razonSocial', label: 'Razón Social' },
   { key: 'preparador', label: 'Preparador' },
   { key: 'prioridad', label: 'Prioridad' },
   { key: 'estado', label: 'Estado' },
   { key: 'avance', label: 'Avance' },
   { key: 'transporte', label: 'Transporte' },
   { key: 'zona', label: 'Zona' },
-  { key: 'localidad', label: 'Localidad' }
 ]
 
 const KANBAN_COLUMNS = [
@@ -252,6 +250,60 @@ function KanbanCardMenu({ preparacion, openMenuId, setOpenMenuId, operarios, onS
 export default function PreparacionesList({ preparaciones, searchTerm, onSearchChange, operarios, onSaveEdit, onView, onDelete, onCreate, onGenerateReport, onPrintReport, onRowClick, prioridades = [] }) {
   const [openMenuId, setOpenMenuId] = useState(null)
   const [viewMode, setViewMode] = useState('list')
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [filters, setFilters] = useState(buildEmptyFilters)
+
+  const hasActiveFilters = (() => {
+    const defaults = buildEmptyFilters()
+    return Object.entries(filters).some(([k, v]) => {
+      if (k === 'preparadores') return (v ?? []).length > 0
+      if (k === 'fechaDesde' || k === 'fechaHasta') return v !== defaults[k]
+      return v !== ''
+    })
+  })()
+
+  const parseDateDMY = (str) => {
+    if (!str) return null
+    const [d, m, y] = str.split(/[\/\-]/).map(Number)
+    if (!d || !m || !y) return null
+    return new Date(y, m - 1, d)
+  }
+
+  const filteredByPanel = preparaciones.filter(p => {
+    if (filters.fechaDesde) {
+      const from = parseDateDMY(filters.fechaDesde)
+      const val  = parseDateDMY(p.fecha)
+      if (from && val && val < from) return false
+    }
+    if (filters.fechaHasta) {
+      const to  = parseDateDMY(filters.fechaHasta)
+      const val = parseDateDMY(p.fecha)
+      if (to && val && val > to) return false
+    }
+    if (filters.origen && String(p.origen ?? '') !== filters.origen) return false
+    if (filters.comprobanteDesde) {
+      const comp = p.numeroPreparacion ?? p.comprobante ?? ''
+      if (comp < filters.comprobanteDesde) return false
+    }
+    if (filters.comprobanteHasta) {
+      const comp = p.numeroPreparacion ?? p.comprobante ?? ''
+      if (comp > filters.comprobanteHasta) return false
+    }
+    if (filters.sucursal && String(p.sucursal ?? '') !== filters.sucursal) return false
+    if (filters.deposito && String(p.deposito ?? '') !== filters.deposito) return false
+    if ((filters.preparadores ?? []).length > 0) {
+      if (!filters.preparadores.some(name => String(p.preparador ?? '').includes(name))) return false
+    }
+    if (filters.prioridad && String(p.prioridad ?? '').toLowerCase() !== filters.prioridad.toLowerCase()) return false
+    if (filters.estado && String(p.estado ?? '') !== filters.estado) return false
+    if (filters.transporte && String(p.transporte ?? '') !== filters.transporte) return false
+    if (filters.zona && String(p.zona ?? '') !== filters.zona) return false
+    if (filters.cliente) {
+      const match = (p.clientes ?? []).some(c => c.razonSocial === filters.cliente)
+      if (!match) return false
+    }
+    return true
+  })
 
   const formatCell = (preparacion, column) => {
     if (column.key === 'preparador') return <span className={styles.verDetallePill}>Ver detalle</span>
@@ -280,13 +332,20 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
         </div>
 
         <div className={styles.toolbarActions}>
-          <button type="button" className={styles.filterBtn} title="Filtros" aria-label="Filtros">
+          <button
+            type="button"
+            className={`${styles.filterBtn} ${hasActiveFilters ? styles.filterBtnActive : ''}`}
+            title="Filtros"
+            aria-label="Filtros"
+            onClick={() => setShowFilterPanel(true)}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="21" x2="14" y1="4" y2="4" /><line x1="10" x2="3" y1="4" y2="4" />
               <line x1="21" x2="12" y1="12" y2="12" /><line x1="8" x2="3" y1="12" y2="12" />
               <line x1="21" x2="16" y1="20" y2="20" /><line x1="12" x2="3" y1="20" y2="20" />
               <line x1="14" x2="14" y1="2" y2="6" /><line x1="8" x2="8" y1="10" y2="14" /><line x1="16" x2="16" y1="18" y2="22" />
             </svg>
+            {hasActiveFilters && <span className={styles.filterDot} />}
           </button>
 
           <div className={styles.viewToggleGroup} role="group" aria-label="Cambiar vista">
@@ -340,14 +399,14 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
               </tr>
             </thead>
             <tbody>
-              {preparaciones.length === 0 ? (
+              {filteredByPanel.length === 0 ? (
                 <tr>
                   <td colSpan={COLUMNS.length + 1} className={styles.empty}>
                     No hay preparaciones para mostrar
                   </td>
                 </tr>
               ) : (
-                preparaciones.map(preparacion => (
+                filteredByPanel.map(preparacion => (
                   <tr key={preparacion.id} className={styles.clickableRow} onClick={() => onRowClick?.(preparacion)}>
                     {COLUMNS.map(column => <td key={column.key}>{formatCell(preparacion, column)}</td>)}
                     <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
@@ -364,7 +423,7 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
       {viewMode === 'kanban' && (
         <div className={styles.kanbanContainer}>
           {KANBAN_COLUMNS.map(col => {
-            const cards = preparaciones.filter(p => (p.estado ?? 'Sin Asignar') === col.id)
+            const cards = filteredByPanel.filter(p => (p.estado ?? 'Sin Asignar') === col.id)
             return (
               <div key={col.id} className={styles.kanbanColumn}>
                 <div className={styles.kanbanColumnHeader} style={{ borderLeftColor: col.color }}>
@@ -405,6 +464,16 @@ export default function PreparacionesList({ preparaciones, searchTerm, onSearchC
             )
           })}
         </div>
+      )}
+
+      {showFilterPanel && (
+        <PreparacionesFilterPanel
+          filters={filters}
+          allPreparaciones={preparaciones}
+          operarios={operarios}
+          onApply={setFilters}
+          onClose={() => setShowFilterPanel(false)}
+        />
       )}
     </div>
   )

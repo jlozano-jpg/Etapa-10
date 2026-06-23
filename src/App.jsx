@@ -75,6 +75,39 @@ const INITIAL_PREPARACIONES = [
       { codigo: 'ART-031', descripcion: 'MOUSE INALÁMBRICO', cantidad: 5 },
     ]}],
   },
+  {
+    id: 105, fecha: '23/06/2026', origen: 'Pedido de venta', comprobante: '00001238', numeroPreparacion: '00001238',
+    sucursal: 'SUCURSAL CENTRAL', deposito: '10', codigo: '00022', razonSocial: 'RETROBOROS SA',
+    preparador: 'Ana Torres', controlador: '', prioridad: 'Alta', estado: 'Pendiente',
+    avance: 0, transporte: 'ANDREANI', zona: 'A', localidad: 'BUENOS AIRES',
+    comprobantesIncluidos: ['00001238'],
+    clientes: [{ razonSocial: 'RETROBOROS SA', comprobantes: ['00001238'], items: [
+      { codigo: 'ART-040', descripcion: 'VÁLVULA ESFÉRICA 1"', cantidad: 30 },
+      { codigo: 'ART-041', descripcion: 'CODO PVC 90° 110mm', cantidad: 50 },
+    ]}],
+  },
+  {
+    id: 106, fecha: '23/06/2026', origen: 'Sugerencia de compra', comprobante: '00001239', numeroPreparacion: '00001239',
+    sucursal: 'SUCURSAL NORTE', deposito: '20', codigo: '00017', razonSocial: 'DISTRIBUIDORA DEL SUR SA',
+    preparador: 'Carlos Fernández', controlador: '', prioridad: 'Media', estado: 'En Proceso',
+    avance: 25, transporte: 'OCA', zona: 'B', localidad: 'CÓRDOBA',
+    comprobantesIncluidos: ['00001239'],
+    clientes: [{ razonSocial: 'DISTRIBUIDORA DEL SUR SA', comprobantes: ['00001239'], items: [
+      { codigo: 'ART-050', descripcion: 'LLAVE TÉRMICA 32A', cantidad: 20 },
+      { codigo: 'ART-051', descripcion: 'TABLERO EMBUTIR 12 MOD', cantidad: 8 },
+    ]}],
+  },
+  {
+    id: 107, fecha: '23/06/2026', origen: 'Pedido de venta', comprobante: '00001240', numeroPreparacion: '00001240',
+    sucursal: 'SUCURSAL SUR', deposito: '30', codigo: '00031', razonSocial: 'COMERCIAL NORTE SRL',
+    preparador: 'Juan Pérez', controlador: '', prioridad: 'Baja', estado: 'Pendiente',
+    avance: 0, transporte: 'VIA CARGO', zona: 'C', localidad: 'ROSARIO',
+    comprobantesIncluidos: ['00001240'],
+    clientes: [{ razonSocial: 'COMERCIAL NORTE SRL', comprobantes: ['00001240'], items: [
+      { codigo: 'ART-060', descripcion: 'MEMBRANA ASFÁLTICA 4mm', cantidad: 10 },
+      { codigo: 'ART-061', descripcion: 'PINTURA EXTERIOR 20L', cantidad: 6 },
+    ]}],
+  },
 ]
 
 const INITIAL_PRIORIDADES = [
@@ -236,7 +269,7 @@ export default function App() {
     setShowDocumentoPanel(false)
   }
 
-  const buildNuevaPreparacion = ({ pedido, prioridad, deposito, metodologiaPickeo, modoEjecucion, origenLabel }, preparador, areasSolicitadas) => {
+  const buildNuevaPreparacion = ({ pedido, prioridad, deposito, transporte, zona, metodologiaPickeo, modoEjecucion, origenLabel }, preparador, areasSolicitadas) => {
     const nextId = preparaciones.length > 0 ? Math.max(...preparaciones.map(p => p.id)) + 1 : 1
 
     return {
@@ -254,8 +287,8 @@ export default function App() {
       prioridad,
       estado: 'Pendiente',
       avance: 0,
-      transporte: '',
-      zona: '',
+      transporte: transporte || '',
+      zona: zona || '',
       localidad: '',
       metodologiaPickeo,
       modoEjecucion,

@@ -11,6 +11,8 @@ const METODOLOGIAS_PICKEO = [
   { value: 'FEFO', label: 'FEFO', description: 'Primero en Vencer, Primero en Salir' },
   { value: 'Liberar ubicaciones', label: 'Liberar Ubicaciones', description: 'Prioriza ubicaciones con menos stock' }
 ]
+const TRANSPORTES = ['ANDREANI', 'CORREO ARGENTINO', 'OCA', 'VIA CARGO', 'TRANSPORTE PROPIO']
+const ZONAS = ['A', 'B', 'C', 'D']
 const MODOS_EJECUCION = [
   { value: 'Recorrido Único', label: 'Recorrido Único', description: 'Un preparador recorre todas las ubicaciones del depósito' },
   { value: 'Picking por Áreas', label: 'Picking por Áreas', description: 'Un preparador por área; el pickeo se realiza en simultáneo' },
@@ -33,6 +35,8 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
   const [preparador, setPreparador] = useState('')
   const [prioridad, setPrioridad] = useState('')
   const [deposito, setDeposito] = useState('DEPÓSITO INTER B')
+  const [transporte, setTransporte] = useState('')
+  const [zona, setZona] = useState('')
 
   const busyMap = new Map()
   preparaciones
@@ -103,7 +107,7 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
   const handleConfirm = () => {
     const pedido = documentos.find(p => p.id === selectedId)
     if (!pedido) return
-    onConfirm({ pedido, preparador, prioridad, deposito, metodologiaPickeo, modoEjecucion })
+    onConfirm({ pedido, preparador, prioridad, deposito, transporte, zona, metodologiaPickeo, modoEjecucion })
   }
 
   const isContinueDisabled = selectedId === null
@@ -252,18 +256,6 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
             </select>
           </div>
 
-          <div className={styles.filterField}>
-            <label className={styles.filterLabel} htmlFor="prep-documento-deposito">Depósito</label>
-            <select
-              id="prep-documento-deposito"
-              className={styles.filterSelect}
-              value={deposito}
-              onChange={(e) => setDeposito(e.target.value)}
-            >
-              {DEPOSITOS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-
           <button type="button" className={styles.filterIconBtn} title="Filtros" aria-label="Filtros">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="21" x2="14" y1="4" y2="4" />
@@ -277,6 +269,46 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
               <line x1="16" x2="16" y1="18" y2="22" />
             </svg>
           </button>
+        </div>
+
+        <div className={styles.filtersRow}>
+          <div className={styles.filterField}>
+            <label className={styles.filterLabel} htmlFor="prep-documento-transporte">Transporte</label>
+            <select
+              id="prep-documento-transporte"
+              className={styles.filterSelect}
+              value={transporte}
+              onChange={(e) => setTransporte(e.target.value)}
+            >
+              <option value="">Sin asignar</option>
+              {TRANSPORTES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
+          <div className={styles.filterField}>
+            <label className={styles.filterLabel} htmlFor="prep-documento-zona">Zona</label>
+            <select
+              id="prep-documento-zona"
+              className={styles.filterSelect}
+              value={zona}
+              onChange={(e) => setZona(e.target.value)}
+            >
+              <option value="">Sin asignar</option>
+              {ZONAS.map(z => <option key={z} value={z}>{z}</option>)}
+            </select>
+          </div>
+
+          <div className={styles.filterField}>
+            <label className={styles.filterLabel} htmlFor="prep-documento-deposito">Depósito</label>
+            <select
+              id="prep-documento-deposito"
+              className={styles.filterSelect}
+              value={deposito}
+              onChange={(e) => setDeposito(e.target.value)}
+            >
+              {DEPOSITOS.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className={styles.tableContainer}>

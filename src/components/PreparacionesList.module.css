@@ -102,6 +102,22 @@
   color: #FCFDFD;
 }
 
+.filterBtnActive {
+  background: #8833B8;
+  color: #FCFDFD;
+}
+
+.filterDot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00CDCD;
+  border: 2px solid #FCFDFD;
+}
+
 .newBtn {
   position: relative;
   display: inline-flex;
