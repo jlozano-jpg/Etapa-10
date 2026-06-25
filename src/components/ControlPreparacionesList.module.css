@@ -238,70 +238,17 @@
   vertical-align: middle;
 }
 
-.headerRow {
-  background: #F3F7F7;
-  font-weight: 600;
-}
-
-.headerRow td {
-  color: #002955;
-}
-
-.fechaCell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.expandBtn {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #667F99;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 150ms ease;
-}
-
-.expandBtn:hover {
-  background: #FCFDFD;
-  color: #8833B8;
-}
-
-.expandBtn:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #8833B8;
-}
-
-.expandIcon,
-.expandIconOpen {
-  width: 16px;
-  height: 16px;
-  transition: transform 150ms ease;
-}
-
-.expandIconOpen {
-  transform: rotate(180deg);
-}
-
-.detailRow {
-  background: #FCFDFD;
+.dataRow {
   cursor: pointer;
   transition: background 150ms ease;
 }
 
-.detailRow:hover {
+.dataRow:hover {
   background: #F3F7F7;
 }
 
-.detailRowSelected,
-.detailRowSelected:hover {
+.dataRowSelected,
+.dataRowSelected:hover {
   background: #F0E5F6;
 }
 

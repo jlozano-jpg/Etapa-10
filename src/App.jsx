@@ -13,6 +13,7 @@ import DespachoList from './components/DespachoList'
 import PrioridadesList from './components/PrioridadesList'
 import PrioridadPanel from './components/PrioridadPanel'
 import ControlPanel from './components/ControlPanel'
+import ControlClientePanel from './components/ControlClientePanel'
 import EditPreparacionModal from './components/EditPreparacionModal'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
@@ -141,6 +142,7 @@ export default function App() {
 
   const [controlPreparaciones] = useState(CONTROL_PREPARACIONES)
   const [controlPanelData, setControlPanelData] = useState(null)
+  const [controlClienteData, setControlClienteData] = useState(null)
   const [controlPreparacionesSearchTerm, setControlPreparacionesSearchTerm] = useState('')
 
   const [tabs, setTabs] = useState([INICIO_TAB])
@@ -162,15 +164,9 @@ export default function App() {
 
   const filteredControlPreparaciones = controlPreparaciones.filter(p => {
     const term = controlPreparacionesSearchTerm.toLowerCase()
-    const matchesPrincipal =
-      String(p.comprobante ?? '').toLowerCase().includes(term) ||
-      String(p.razonSocial ?? '').toLowerCase().includes(term) ||
-      String(p.preparador ?? '').toLowerCase().includes(term)
-    const matchesDetalle = (p.detalle ?? []).some(item =>
-      String(item.codigo ?? '').toLowerCase().includes(term) ||
-      String(item.razonSocial ?? '').toLowerCase().includes(term)
-    )
-    return matchesPrincipal || matchesDetalle
+    return String(p.comprobante ?? '').toLowerCase().includes(term) ||
+      String(p.preparador ?? '').toLowerCase().includes(term) ||
+      (p.clientes ?? []).some(c => String(c.razonSocial ?? '').toLowerCase().includes(term))
   })
 
   const handleViewOperario = (operario) => {
@@ -389,9 +385,19 @@ export default function App() {
   const handleRotulos = () => { alert('Generando rótulos...') }
   const handleImprimirHojaRuta = () => { alert('Imprimiendo hoja de ruta...') }
 
-  const handleIniciarControl = (seleccion) => {
-    if (!seleccion) return
-    setControlPanelData(seleccion)
+  const handleIniciarControl = (preparacion) => {
+    if (!preparacion) return
+    const clientes = preparacion.clientes ?? []
+    if (clientes.length === 1) {
+      setControlPanelData({ preparacion, item: clientes[0] })
+    } else {
+      setControlClienteData(preparacion)
+    }
+  }
+
+  const handleSelectCliente = (preparacion, cliente) => {
+    setControlClienteData(null)
+    setControlPanelData({ preparacion, item: cliente })
   }
 
   const handleCloseControlPanel = () => setControlPanelData(null)
@@ -401,11 +407,11 @@ export default function App() {
   }
 
   const handleModificarControl = ({ item }) => {
-    alert(`Modificar control de ${item.codigo} - ${item.razonSocial}...`)
+    alert(`Modificar control de ${item?.codigo} - ${item?.razonSocial}...`)
   }
 
-  const handleLiberarControl = ({ item }) => {
-    alert(`Liberando preparación ${item.codigo} - ${item.razonSocial}...`)
+  const handleLiberarControl = () => {
+    alert('Liberando preparaciones...')
   }
 
   const handleNavigate = (viewId) => {
@@ -575,6 +581,14 @@ export default function App() {
           prioridad={prioridadPanel.data}
           onSave={handleGuardarPrioridad}
           onCancel={handleCancelarPrioridad}
+        />
+      )}
+
+      {controlClienteData && (
+        <ControlClientePanel
+          preparacion={controlClienteData}
+          onSelect={handleSelectCliente}
+          onClose={() => setControlClienteData(null)}
         />
       )}
 
