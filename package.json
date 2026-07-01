@@ -1,6 +1,6 @@
 {
-  "name": "zeus-evolutivo-stock",
-  "version": "1.0.0",
+  "name": "zeus-evolutivo-stock-v3",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

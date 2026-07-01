@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './OperariosList.module.css'
+import AsignacionAutomaticaPanel from './AsignacionAutomaticaPanel'
 
 export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onDelete, onCreate }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [showAsignacion, setShowAsignacion] = useState(false)
   const [sortBy, setSortBy] = useState('code')
   const [sortDirection, setSortDirection] = useState('asc')
   const scrollContainerRef = useRef(null)
@@ -101,12 +103,28 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
           />
         </div>
 
-        <button className={styles.newBtn} onClick={onCreate}>
-          <svg className={styles.newIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Nuevo Operador
-        </button>
+        <div className={styles.toolbarRight}>
+          <button className={styles.autoBtn} onClick={() => setShowAsignacion(true)}>
+            <svg className={styles.autoBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/>
+              <path d="m14 7 3 3"/>
+              <path d="M5 6v4"/>
+              <path d="M19 14v4"/>
+              <path d="M10 2v2"/>
+              <path d="M7 8H3"/>
+              <path d="M21 16h-4"/>
+              <path d="M11 3H9"/>
+            </svg>
+            Asignación automática
+          </button>
+
+          <button className={styles.newBtn} onClick={onCreate}>
+            <svg className={styles.newIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Nuevo Operador
+          </button>
+        </div>
       </div>
 
       <div className={styles.tableContainer} ref={scrollContainerRef}>
@@ -262,6 +280,10 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
       <div className={styles.footer}>
         <p>{sortedOperarios.length} operarios encontrados</p>
       </div>
+
+      {showAsignacion && (
+        <AsignacionAutomaticaPanel onClose={() => setShowAsignacion(false)} />
+      )}
     </div>
   )
 }

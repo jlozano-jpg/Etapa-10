@@ -366,6 +366,81 @@
   color: #002955;
 }
 
+/* ── Atributos ───────────────────────────────────────────────── */
+
+.atributoRow {
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.atributoTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.atributoNombre {
+  font-size: 13px;
+  color: #002955;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.atributoDesc {
+  font-size: 11.5px;
+  color: #667F99;
+  line-height: 1.45;
+}
+
+/* ── Indicadores calculados ──────────────────────────────────── */
+
+.indicadoresBox {
+  border: 1px solid #E0EAEB;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.indicadorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #F3F7F7;
+}
+
+.indicadorRow:last-child {
+  border-bottom: none;
+}
+
+.indicadorIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #8A7BA0;
+}
+
+.indicadorIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.indicadorLabel {
+  flex: 1;
+  font-size: 13px;
+  color: #335477;
+  line-height: 1.3;
+}
+
+.indicadorValor {
+  font-size: 14px;
+  font-weight: 700;
+  color: #002955;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .panel {
     width: 100%;

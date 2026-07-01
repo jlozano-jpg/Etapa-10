@@ -12,6 +12,12 @@ const AVAILABLE_USUARIOS = [
   'U008 - rgarcia'
 ]
 
+const AVAILABLE_DEPOSITOS = [
+  'D01 - Depósito Central',
+  'D02 - Sucursal Norte',
+  'D03 - Sucursal Sur',
+]
+
 const AVAILABLE_AREAS = [
   '01 - Depósito Central',
   '02 - Depósito Norte',
@@ -19,6 +25,20 @@ const AVAILABLE_AREAS = [
   '04 - Recepción',
   '05 - Expedición'
 ]
+
+function calcAntiguedad(fechaStr) {
+  if (!fechaStr) return '--'
+  const start = new Date(fechaStr)
+  if (isNaN(start.getTime())) return '--'
+  const now = new Date()
+  let years = now.getFullYear() - start.getFullYear()
+  let months = now.getMonth() - start.getMonth()
+  if (months < 0) { years--; months += 12 }
+  if (years < 0) return '--'
+  if (years === 0 && months === 0) return '< 1m'
+  if (years === 0) return `${months}m`
+  return `${years}a ${months}m`
+}
 
 export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
   const [formData, setFormData] = useState(() => ({ ...operario }))
@@ -80,6 +100,8 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
     }
   }
 
+  const isOperador = formData.preparador || formData.controlador
+
   const titles = {
     view: 'Ver Operario',
     edit: 'Editar Operario',
@@ -103,6 +125,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
         </div>
 
         <div className={styles.content}>
+          {/* CÓDIGO */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Código *</label>
             <input
@@ -118,6 +141,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             {mode !== 'create' && <p className={styles.helperText}>No editable</p>}
           </div>
 
+          {/* USUARIO */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Usuario ZEUS ERP &amp; POS *</label>
             <select
@@ -136,6 +160,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             </select>
           </div>
 
+          {/* NOMBRE */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Nombre</label>
             <input
@@ -149,6 +174,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             />
           </div>
 
+          {/* INICIO DE ACTIVIDADES */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Inicio de Actividades</label>
             <input
@@ -162,6 +188,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             />
           </div>
 
+          {/* FECHA DE NACIMIENTO */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Fecha de Nacimiento</label>
             <input
@@ -175,6 +202,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             />
           </div>
 
+          {/* ROLES */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Roles *</h3>
 
@@ -203,25 +231,117 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
               <span className={styles.toggleSwitch} aria-hidden="true" />
               <span className={styles.toggleLabel}>Controlador</span>
             </label>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Área</label>
-              <select
-                value={formData.area ?? ''}
-                onChange={(e) => handleChange('area', e.target.value)}
-                disabled={mode === 'view' || !formData.preparador}
-                onKeyDown={handleKeyDown}
-                className={styles.select}
-                aria-label="Área"
-              >
-                <option value="">Seleccionar área...</option>
-                {AVAILABLE_AREAS.map(area => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </select>
-              <p className={styles.helperText}>Disponible al activar el rol Preparador</p>
-            </div>
           </div>
+
+          {/* Secciones visibles solo cuando hay al menos un rol activo */}
+          {isOperador && (
+            <>
+              {/* DEPÓSITO */}
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Depósito</label>
+                <select
+                  value={formData.deposito ?? ''}
+                  onChange={(e) => handleChange('deposito', e.target.value)}
+                  disabled={mode === 'view'}
+                  onKeyDown={handleKeyDown}
+                  className={styles.select}
+                  aria-label="Depósito"
+                >
+                  <option value="">Seleccionar depósito...</option>
+                  {AVAILABLE_DEPOSITOS.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* ÁREA */}
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Área</label>
+                <select
+                  value={formData.area ?? ''}
+                  onChange={(e) => handleChange('area', e.target.value)}
+                  disabled={mode === 'view' || !formData.preparador}
+                  onKeyDown={handleKeyDown}
+                  className={styles.select}
+                  aria-label="Área"
+                >
+                  <option value="">Seleccionar área...</option>
+                  {AVAILABLE_AREAS.map(area => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+                <p className={styles.helperText}>Disponible al activar el rol Preparador</p>
+              </div>
+
+              {/* ATRIBUTOS */}
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>Atributos</h3>
+
+                <label className={`${styles.toggleGroup} ${styles.atributoRow}`}>
+                  <input
+                    type="checkbox"
+                    checked={formData.apto ?? false}
+                    onChange={() => handleCheckChange('apto')}
+                    disabled={mode === 'view'}
+                    className={styles.toggleInput}
+                    aria-label="Apto autoelevador"
+                  />
+                  <span className={styles.toggleSwitch} aria-hidden="true" />
+                  <span className={styles.atributoTexto}>
+                    <span className={styles.atributoNombre}>Apto autoelevador</span>
+                    <span className={styles.atributoDesc}>Habilita preparaciones con ubicaciones en altura o pallets pesados.</span>
+                  </span>
+                </label>
+              </div>
+
+              {/* INDICADORES CALCULADOS */}
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>Indicadores Calculados</h3>
+
+                <div className={styles.indicadoresBox}>
+                  <div className={styles.indicadorRow}>
+                    <span className={styles.indicadorIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="6"/>
+                        <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+                      </svg>
+                    </span>
+                    <span className={styles.indicadorLabel}>Antigüedad en el puesto</span>
+                    <span className={styles.indicadorValor}>{calcAntiguedad(formData.inicioActividades)}</span>
+                  </div>
+
+                  <div className={styles.indicadorRow}>
+                    <span className={styles.indicadorIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                      </svg>
+                    </span>
+                    <span className={styles.indicadorLabel}>Artículos promedio / preparación</span>
+                    <span className={styles.indicadorValor}>
+                      {formData.articulosPromedio != null ? formData.articulosPromedio : '--'}
+                    </span>
+                  </div>
+
+                  <div className={styles.indicadorRow}>
+                    <span className={styles.indicadorIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 7v5l3.5 2"/>
+                      </svg>
+                    </span>
+                    <span className={styles.indicadorLabel}>Tiempo promedio / ubicación</span>
+                    <span className={styles.indicadorValor}>
+                      {formData.tiempoPromedio != null ? formData.tiempoPromedio : '--'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className={styles.helperText}>No editable. Calculado en base al historial de preparaciones.</p>
+              </div>
+            </>
+          )}
         </div>
 
         {(mode === 'edit' || mode === 'create') && (
