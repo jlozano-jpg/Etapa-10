@@ -15,6 +15,7 @@ import PrioridadPanel from './components/PrioridadPanel'
 import ControlPanel from './components/ControlPanel'
 import ControlClientePanel from './components/ControlClientePanel'
 import EditPreparacionModal from './components/EditPreparacionModal'
+import Ubicaciones from './components/Ubicaciones'
 import { ORIGENES_CONFIG } from './data/preparacionDocumentos'
 import { CONTROL_PREPARACIONES } from './data/controlPreparaciones'
 import styles from './App.module.css'
@@ -257,6 +258,7 @@ export default function App() {
   }
 
   const handleCancelPreparacionOrigen = () => {
+
     setShowPreparacionOrigenModal(false)
     setShowDocumentoPanel(false)
     setArticulosSinArea([])
@@ -369,6 +371,7 @@ export default function App() {
   }
 
   const handleCrearPrioridad = () => setPrioridadPanel({ mode: 'create', data: null })
+  const handleVisualizarPrioridad = (p) => setPrioridadPanel({ mode: 'view', data: p })
   const handleEditarPrioridad = (p) => setPrioridadPanel({ mode: 'edit', data: p })
   const handleEliminarPrioridad = (p) => {
     if (confirm(`¿Eliminar "${p.descripcion}"?`)) {
@@ -378,7 +381,7 @@ export default function App() {
   const handleGuardarPrioridad = (data) => {
     if (prioridadPanel.mode === 'create') {
       const nextId = prioridades.length > 0 ? Math.max(...prioridades.map(p => p.id)) + 1 : 1
-      setPrioridades(prev => [...prev, { ...data, id: nextId }])
+      setPrioridades(prev => [...prev, { ...data, id: nextId, codigo: data.codigo || nextId }])
     } else {
       setPrioridades(prev => prev.map(p => p.id === data.id ? data : p))
     }
@@ -455,6 +458,15 @@ export default function App() {
         ? prev
         : [...prev, { id: 'prioridades', label: 'Prioridades', closable: true }])
       setActiveTab('prioridades')
+      return
+    }
+
+    if (viewId === 'ubicaciones') {
+      setTabs(prev => prev.some(tab => tab.id === 'ubicaciones')
+        ? prev
+        : [...prev, { id: 'ubicaciones', label: 'Ubicaciones', closable: true }])
+      setActiveTab('ubicaciones')
+      return
     }
   }
 
@@ -510,9 +522,14 @@ export default function App() {
           <PrioridadesList
             prioridades={prioridades}
             onCrear={handleCrearPrioridad}
+            onVisualizar={handleVisualizarPrioridad}
             onEditar={handleEditarPrioridad}
             onEliminar={handleEliminarPrioridad}
           />
+        )}
+
+        {activeTab === 'ubicaciones' && (
+          <Ubicaciones />
         )}
 
         {activeTab === 'despacho' && (
@@ -585,6 +602,7 @@ export default function App() {
           prioridad={prioridadPanel.data}
           onSave={handleGuardarPrioridad}
           onCancel={handleCancelarPrioridad}
+          onEdit={handleEditarPrioridad}
         />
       )}
 

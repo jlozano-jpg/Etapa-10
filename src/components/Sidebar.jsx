@@ -11,6 +11,13 @@ const MENU_ITEMS = [
     label: 'Configuración',
     children: [
       {
+        id: 'tablas-productos',
+        label: 'Tablas de Productos',
+        children: [
+          { id: 'ubicaciones', label: 'Ubicaciones' }
+        ]
+      },
+      {
         id: 'tablas-generales',
         label: 'Tablas Generales',
         children: [
