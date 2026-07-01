@@ -2,8 +2,6 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { ORIGENES_CONFIG } from '../data/preparacionDocumentos'
 import styles from './PreparacionDocumentoPanel.module.css'
 
-const PREPARADORES = ['Juan Pérez', 'María Gómez', 'Carlos Fernández', 'Diego Sosa', 'Ana Torres']
-const PRIORIDADES = ['Alta', 'Media', 'Baja']
 const DEPOSITOS = ['DEPÓSITO INTER B', 'DEPÓSITO CENTRAL', 'DEPÓSITO NORTE', 'DEPÓSITO SUR']
 const METODOLOGIAS_PICKEO = [
   { value: 'PEPS', label: 'PEPS', description: 'Primero Entrado Primero Salido' },
@@ -17,14 +15,6 @@ const MODOS_EJECUCION = [
   { value: 'Recorrido Único', label: 'Recorrido Único', description: 'Un preparador recorre todas las ubicaciones del depósito' },
   { value: 'Picking por Áreas', label: 'Picking por Áreas', description: 'Un preparador por área; el pickeo se realiza en simultáneo' },
 ]
-const ESTADOS_OCUPADO = ['Pendiente', 'En Proceso']
-
-const ClockIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-)
 
 export default function PreparacionDocumentoPanel({ origenId, preparaciones = [], onBack, onCancel, onConfirm, rightOffset = 0, inactive = false }) {
   const config = ORIGENES_CONFIG[origenId]
@@ -32,18 +22,10 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
 
   const [metodologiaPickeo, setMetodologiaPickeo] = useState('Liberar ubicaciones')
   const [modoEjecucion, setModoEjecucion] = useState('Recorrido Único')
-  const [preparador, setPreparador] = useState('')
-  const [prioridad, setPrioridad] = useState('')
   const [deposito, setDeposito] = useState('DEPÓSITO INTER B')
   const [transporte, setTransporte] = useState('')
   const [zona, setZona] = useState('')
 
-  const busyMap = new Map()
-  preparaciones
-    .filter(p => ESTADOS_OCUPADO.includes(p.estado))
-    .forEach(p => { if (!busyMap.has(p.preparador)) busyMap.set(p.preparador, p) })
-
-  const isPreparadorDisabled = modoEjecucion === 'Picking por Áreas'
   const [selectedId, setSelectedId] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
   const [selectedDetalleItems, setSelectedDetalleItems] = useState(new Set())
@@ -107,11 +89,10 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
   const handleConfirm = () => {
     const pedido = documentos.find(p => p.id === selectedId)
     if (!pedido) return
-    onConfirm({ pedido, preparador, prioridad, deposito, transporte, zona, metodologiaPickeo, modoEjecucion })
+    onConfirm({ pedido, deposito, transporte, zona, metodologiaPickeo, modoEjecucion })
   }
 
   const isContinueDisabled = selectedId === null
-    || (modoEjecucion !== 'Picking por Áreas' && (!preparador || !prioridad))
 
   return (
     <>
@@ -213,62 +194,6 @@ export default function PreparacionDocumentoPanel({ origenId, preparaciones = []
               </div>
             )}
           </div>
-        </div>
-
-        <div className={styles.filtersRow}>
-          <div className={`${styles.filterField} ${styles.filterFieldPreparador} ${isPreparadorDisabled ? styles.filterFieldDisabled : ''}`}>
-            <label className={styles.filterLabel} htmlFor="prep-documento-preparador">Preparador</label>
-            <div className={styles.preparadorWrap}>
-              <select
-                id="prep-documento-preparador"
-                className={styles.filterSelect}
-                value={preparador}
-                onChange={(e) => setPreparador(e.target.value)}
-                disabled={isPreparadorDisabled}
-              >
-                <option value="">Selecciona preparador</option>
-                {PREPARADORES.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-              {preparador && busyMap.has(preparador) && (
-                <span
-                  className={styles.busyBadge}
-                  title={`Ocupado en preparación #${busyMap.get(preparador).numeroPreparacion} (${busyMap.get(preparador).estado})`}
-                >
-                  <ClockIcon />
-                  Ocupado
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.filterField}>
-            <label className={styles.filterLabel} htmlFor="prep-documento-prioridad">Prioridad</label>
-            <select
-              id="prep-documento-prioridad"
-              className={styles.filterSelect}
-              value={prioridad}
-              onChange={(e) => setPrioridad(e.target.value)}
-            >
-              <option value="">Selecciona prioridad</option>
-              {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-
-          <button type="button" className={styles.filterIconBtn} title="Filtros" aria-label="Filtros">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="21" x2="14" y1="4" y2="4" />
-              <line x1="10" x2="3" y1="4" y2="4" />
-              <line x1="21" x2="12" y1="12" y2="12" />
-              <line x1="8" x2="3" y1="12" y2="12" />
-              <line x1="21" x2="16" y1="20" y2="20" />
-              <line x1="12" x2="3" y1="20" y2="20" />
-              <line x1="14" x2="14" y1="2" y2="6" />
-              <line x1="8" x2="8" y1="10" y2="14" />
-              <line x1="16" x2="16" y1="18" y2="22" />
-            </svg>
-          </button>
         </div>
 
         <div className={styles.filtersRow}>

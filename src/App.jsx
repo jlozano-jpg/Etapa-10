@@ -7,6 +7,7 @@ import PreparacionesList from './components/PreparacionesList'
 import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
 import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
 import PreparacionAreasPanel from './components/PreparacionAreasPanel'
+import PreparacionAsignacionPanel from './components/PreparacionAsignacionPanel'
 import PreparacionVistaPanel from './components/PreparacionVistaPanel'
 import ControlPreparacionesList from './components/ControlPreparacionesList'
 import DespachoList from './components/DespachoList'
@@ -133,6 +134,7 @@ export default function App() {
   const [showDocumentoPanel, setShowDocumentoPanel] = useState(false)
   const [articulosSinArea, setArticulosSinArea] = useState([])
   const [showAreasPanel, setShowAreasPanel] = useState(false)
+  const [showAsignacionPanel, setShowAsignacionPanel] = useState(false)
   const [selectedOrigenId, setSelectedOrigenId] = useState(null)
   const [pedidoVentaSeleccion, setPedidoVentaSeleccion] = useState(null)
   const [preparacionVista, setPreparacionVista] = useState(null)
@@ -258,11 +260,11 @@ export default function App() {
   }
 
   const handleCancelPreparacionOrigen = () => {
-
     setShowPreparacionOrigenModal(false)
     setShowDocumentoPanel(false)
-    setArticulosSinArea([])
     setShowAreasPanel(false)
+    setShowAsignacionPanel(false)
+    setArticulosSinArea([])
     setSelectedOrigenId(null)
     setPedidoVentaSeleccion(null)
   }
@@ -311,33 +313,41 @@ export default function App() {
 
   const handleConfirmDocumento = (seleccion) => {
     const seleccionConOrigen = { ...seleccion, origenLabel: ORIGENES_CONFIG[selectedOrigenId].badgeLabel }
+    setPedidoVentaSeleccion(seleccionConOrigen)
 
     if (seleccion.modoEjecucion === 'Picking por Áreas') {
       const sinArea = seleccion.pedido.detalle
         .filter(item => !item.area)
         .map(item => ({ codigoArticulo: item.codigoProducto, descripcion: item.descripcion, ubicacion: item.ubicacion ?? '' }))
-
-      setPedidoVentaSeleccion(seleccionConOrigen)
-
       setArticulosSinArea(sinArea)
       setShowAreasPanel(true)
       return
     }
 
-    const nuevaPreparacion = buildNuevaPreparacion(seleccionConOrigen, seleccion.preparador, [])
-    setPreparaciones([...preparaciones, nuevaPreparacion])
+    setShowAsignacionPanel(true)
+  }
 
+  const handleBackFromAreas = () => setShowAreasPanel(false)
+
+  const handleBackFromAsignacion = () => setShowAsignacionPanel(false)
+
+  const resetCrearPreparacion = () => {
+    setShowAreasPanel(false)
+    setShowAsignacionPanel(false)
+    setArticulosSinArea([])
     setShowDocumentoPanel(false)
     setShowPreparacionOrigenModal(false)
     setSelectedOrigenId(null)
     setPedidoVentaSeleccion(null)
   }
 
-  const handleBackFromAreas = () => {
-    setShowAreasPanel(false)
+  const handleConfirmAsignacion = ({ preparador, prioridad }) => {
+    const nuevaPreparacion = buildNuevaPreparacion({ ...pedidoVentaSeleccion, prioridad }, preparador, [])
+    setPreparaciones([...preparaciones, nuevaPreparacion])
+    resetCrearPreparacion()
   }
 
-  const handleConfirmAreas = (asignaciones, articuloResponsables) => {
+  const handleConfirmAreas = (asignaciones, articuloResponsables, prioridad) => {
     const preparador = Object.entries(asignaciones)
       .map(([area, prep]) => `${area}: ${prep}`)
       .join(' | ')
@@ -349,15 +359,9 @@ export default function App() {
       estado: 'Pendiente'
     }))
 
-    const nuevaPreparacion = buildNuevaPreparacion(pedidoVentaSeleccion, preparador, areasSolicitadas)
+    const nuevaPreparacion = buildNuevaPreparacion({ ...pedidoVentaSeleccion, prioridad }, preparador, areasSolicitadas)
     setPreparaciones([...preparaciones, nuevaPreparacion])
-
-    setShowAreasPanel(false)
-    setArticulosSinArea([])
-    setShowDocumentoPanel(false)
-    setShowPreparacionOrigenModal(false)
-    setSelectedOrigenId(null)
-    setPedidoVentaSeleccion(null)
+    resetCrearPreparacion()
   }
 
   const handleDeletePreparacion = (preparacion) => {
@@ -567,11 +571,22 @@ export default function App() {
           pedido={pedidoVentaSeleccion.pedido}
           operarios={operarios}
           preparaciones={preparaciones}
+          prioridades={prioridades}
           numeroPreparacion={nextNumeroPreparacion}
           articulosSinArea={articulosSinArea}
           onBack={handleBackFromAreas}
           onCancel={handleCancelPreparacionOrigen}
           onConfirm={handleConfirmAreas}
+        />
+      ) : showAsignacionPanel && pedidoVentaSeleccion ? (
+        <PreparacionAsignacionPanel
+          operarios={operarios}
+          preparaciones={preparaciones}
+          prioridades={prioridades}
+          numeroPreparacion={nextNumeroPreparacion}
+          onBack={handleBackFromAsignacion}
+          onCancel={handleCancelPreparacionOrigen}
+          onConfirm={handleConfirmAsignacion}
         />
       ) : showDocumentoPanel ? (
         <PreparacionDocumentoPanel

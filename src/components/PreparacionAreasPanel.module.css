@@ -307,6 +307,72 @@
   background: #6A00A7;
 }
 
+/* ── Prioridad section ───────────────────────────────────────── */
+
+.thWithBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prioridadSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid #C2D6D8;
+  border-radius: 10px;
+  background: #F3F7F7;
+}
+
+.prioridadHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prioridadLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #335477;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.suggestedBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #E6F4EA;
+  color: #2E7D32;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #A5D6A7;
+}
+
+.prioridadSelect {
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #002955;
+  background: #FCFDFD;
+  border: 1px solid #C2D6D8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  width: 100%;
+}
+
+.prioridadSelect:hover { border-color: #8833B8; }
+
+.prioridadSelect:focus {
+  outline: none;
+  border-color: #8833B8;
+  box-shadow: 0 0 0 3px rgba(136, 51, 184, 0.12);
+  background: #FCFDFD;
+}
+
 /* ── Artículos sin área ──────────────────────────────────────── */
 
 .sinAreaSection {
